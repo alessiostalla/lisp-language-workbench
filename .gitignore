@@ -1,3 +1,4 @@
+*.abcl
 *.FASL
 *.fasl
 *.lisp-temp
