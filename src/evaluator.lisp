@@ -8,10 +8,12 @@
       ;Lisp objects are self-evaluating
       form)) 
 
-(defmethod transform ((transformer simple-evaluator) (form binding-form) environment)
+(defmethod transform ((transformer simple-evaluator) (form binding) environment)
   (values
-   (transform transformer (binding-form-body form)
-	      (augment-environment environment (transform transformer form environment)))
+   (transform transformer (binding-body form)
+	      (augment-environment environment
+				   (binding-name form)
+				   (transform transformer (binding-spec form) environment)))
    environment))
 
 (defclass local-variable (binding-spec)
@@ -21,7 +23,8 @@
   (make-instance 'local-variable :value (transform transformer (variable-binding-init-form form) environment)))
 
 (defmethod transform ((transformer simple-evaluator) (form variable-read) environment)
-  (let ((meaning (meaning (accessed-variable-name form) 'local-variable environment)))
+  (let* ((variable (accessed-variable-name form))
+	 (meaning (meaning variable 'local-variable environment)))
     (if meaning
 	(local-variable-value meaning)
-	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol (accessed-variable-name form) out))))))) ;TODO proper condition class
+	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class

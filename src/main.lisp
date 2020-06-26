@@ -1,6 +1,11 @@
 (defpackage lisp-language-workbench
   (:use :cl)
-  (:shadow cl:find-symbol cl:function cl:intern cl:symbol cl:symbol-name))
+  (:shadow cl:find-symbol cl:function cl:intern cl:symbol cl:symbol-name)
+  (:export #:find-symbol #:intern #:*root-symbol* #:symbol
+	   #:binding #:variable-binding-spec
+	   #:variable-access #:variable-read #:variable-write
+	   #:environment #:*global-environment* #:transform
+	   #:simple-evaluator))
 (in-package :lisp-language-workbench)
 
 (defclass symbol-space ()
@@ -8,8 +13,8 @@
 
 (defclass symbol ()
   ((name :accessor symbol-name :initarg :name :type string)
-   (container :accessor symbol-container :initarg :container :type symbol)
-   (space :accessor symbol-space :initarg :space :type symbol-space)))
+   (container :accessor symbol-container :initarg :container :type symbol :initform nil)
+   (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)))
 
 (defgeneric intern (name space))
 
@@ -41,7 +46,7 @@
   (princ (symbol-name symbol) stream))
 
 (defclass environment ()
-  ((bindings :initform (fset:map) :reader environment-bindings)))
+  ((bindings :initform (fset:map) :initarg :bindings :reader environment-bindings)))
 
 (defun meaning (symbol kind environment)
   (fset:@ (fset:@ (environment-bindings environment) symbol) kind))
@@ -52,3 +57,7 @@
   (:metaclass closer-mop:funcallable-standard-class))
 
 (defgeneric transform (transformer form environment))
+
+(defvar *root-symbol* (make-instance 'symbol :name ""))
+(defvar *symbol-space* *root-symbol*)
+(defvar *global-environment* (make-instance 'environment))
