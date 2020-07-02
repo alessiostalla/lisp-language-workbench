@@ -2,7 +2,7 @@
   (:use :cl)
   (:shadow cl:find-symbol cl:function cl:intern cl:symbol cl:symbol-name)
   (:export #:find-symbol #:intern #:*root-symbol* #:symbol
-	   #:binding #:variable-binding-spec
+	   #:binding #:conditional #:variable-binding-spec
 	   #:variable-access #:variable-read #:variable-write
 	   #:environment #:*global-environment* #:transform
 	   #:simple-evaluator))
@@ -52,11 +52,11 @@
   (fset:@ (fset:@ (environment-bindings environment) symbol) kind))
 
 (defclass form () ())
-
-(defclass function () ()
-  (:metaclass closer-mop:funcallable-standard-class))
+(defclass macro-form (form) ())
 
 (defgeneric transform (transformer form environment))
+(defmethod transform (transformer (form macro-form) environment)
+  (transform transformer (transform 'expand form environment) environment))
 
 (defvar *root-symbol* (make-instance 'symbol :name ""))
 (defvar *symbol-space* *root-symbol*)

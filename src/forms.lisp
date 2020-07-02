@@ -6,10 +6,17 @@
 (defclass variable-read (variable-access) ())
 
 (defclass variable-write (variable-access)
-  ((form :initarg :form :type form)))
+  ((form :initarg :form)))
+
+(defclass function (form)
+  ((arguments :initform :arguments :reader function-arguments)
+   (expression :initform :expression :reader function-expression)))
+
+(defclass closure (function)
+  ((environment :initform :environment :reader closure-environment)))
 
 (defclass function-access (form)
-  ((function-designator :initarg :name :reader accessed-function-designator)))
+  ((function-designator :initarg :function :reader accessed-function-designator)))
 
 (defclass function-reference (function-access) ())
 
@@ -40,3 +47,13 @@
 
 (defclass variable-binding-spec (binding-spec)
   ((init-form :initarg :init-form :initform nil :reader variable-binding-init-form)))
+(defclass function-binding-spec (binding-spec)
+  ((init-form :initarg :init-form :initform nil :reader function-binding-init-form)))
+
+(defclass conditional-branch ()
+  ())
+
+(defclass conditional (form)
+  ((condition :initarg :condition :reader conditional-if)
+   (then :initarg :then :reader conditional-then)
+   (else :initarg :else :reader conditional-else)))

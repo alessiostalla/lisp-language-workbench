@@ -28,3 +28,8 @@
     (if meaning
 	(local-variable-value meaning)
 	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
+
+(defmethod transform ((transformer simple-evaluator) (form conditional) environment)
+  (if (transform transformer (conditional-if form)   environment)
+      (transform transformer (conditional-then form) environment)
+      (transform transformer (conditional-else form) environment)))
