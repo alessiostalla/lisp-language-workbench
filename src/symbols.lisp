@@ -9,6 +9,9 @@
    (container :reader symbol-container :initarg :container :type symbol :initform nil)
    (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)))
 
+(defvar *root-symbol* (make-instance 'symbol :name ""))
+(defvar *symbol-space* *root-symbol*)
+
 (defgeneric intern (name space))
 
 (defmethod intern (name (space symbol-space))
@@ -37,7 +40,8 @@
     (when (and container (not (eq container *symbol-space*)))
       (print-symbol container stream)
       (princ ":" stream)))
-  (princ (symbol-name symbol) stream))
+  (princ (symbol-name symbol) stream)
+  symbol)
 
 (defun read-symbol (stream)
   (let* ((separator #\:)
@@ -61,6 +65,3 @@
 	(let ((*symbol-space* symbol))
 	  (read-symbol stream))
 	symbol)))
-
-(defvar *root-symbol* (make-instance 'symbol :name ""))
-(defvar *symbol-space* *root-symbol*)
