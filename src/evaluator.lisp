@@ -8,6 +8,9 @@
       ;Lisp objects are self-evaluating
       form)) 
 
+(defmethod transform ((transformer simple-evaluator) (form constant) environment)
+  (constant-value form))
+
 (defmethod transform ((transformer simple-evaluator) (form binding) environment)
   (values
    (transform transformer (binding-body form)

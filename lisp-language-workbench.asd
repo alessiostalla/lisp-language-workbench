@@ -2,10 +2,11 @@
   :version "0.1.0"
   :author ""
   :license ""
-  :depends-on ("closer-mop" "fset")
+  :depends-on ("closer-mop" "cl-unification" "fset")
   :components ((:module "src"
                 :components
-                ((:file "main") (:file "forms") (:file "evaluator"))))
+                ((:file "packages") (:file "main") (:file "symbols")
+		 (:file "forms") (:file "evaluator") (:file "s-expressions"))))
   :description ""
   :in-order-to ((test-op (test-op "lisp-language-workbench/tests"))))
 

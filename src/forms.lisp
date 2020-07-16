@@ -1,5 +1,8 @@
 (in-package :lisp-language-workbench)
 
+(defclass constant (form)
+  ((value :initarg :value :reader constant-value)))
+
 (defclass variable-access (form)
   ((variable-name :initarg :name :reader accessed-variable-name)))
 
