@@ -34,3 +34,19 @@
     (if (> diff 0)
 	(append list (make-list diff :initial-element fill-with))
 	list)))
+
+(defclass sexp-transformer () ())
+(defmethod transform ((transformer sexp-transformer) form environment)
+  form)
+(defmethod transform ((transformer sexp-transformer) (form form) environment)
+  (let ((template (form-template form)))
+    `(,(car template) ,@(mapcar (lambda (x)
+				  (if (typep x 'closer-mop:slot-definition)
+				      (transform transformer (slot-value form (closer-mop:slot-definition-name x)) environment)
+				      x))
+				template))))
+
+(defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat form) env)
+  nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...
+(defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat symbol) env)
+  nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...

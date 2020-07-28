@@ -15,23 +15,30 @@
   (testing "Lisp objects (e.g., numbers) should eval to themselves"
     (ok (= 1 (transform (make-instance 'simple-evaluator) 1 *global-environment*))))
   
-  (testing "(bind ((var a)) a) should eval to nil"
+  (testing "(binding ((var a)) a) should eval to nil"
     (let* ((var (intern "a" *root-symbol*))
 	   (form (make-instance 'binding :name var :spec (make-instance 'variable-binding-spec)
 				:body (make-instance 'variable-read :name var)))
 	   (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
       (ok (null result))))
 
-    (testing "(bind ((var a 1)) a) should eval to 1"
-      (let* ((var (intern "a" *root-symbol*))
-	     (value 1)
-	     (form (make-instance 'binding :name var :spec (make-instance 'variable-binding-spec :init-form value)
-				  :body (make-instance 'variable-read :name var)))
-	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
-	(ok (= value result))))
-
-    (testing "(if t 1) should eval to 1"
-      (let* ((value 1)
-	     (form (make-instance 'conditional :condition t :then value))
-	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
+  (testing "(binding ((var a 1)) a) should eval to 1"
+    (let* ((var (intern "a" *root-symbol*))
+	   (value 1)
+	   (form (make-instance 'binding :name var :spec (make-instance 'variable-binding-spec :init-form value)
+				:body (make-instance 'variable-read :name var)))
+	   (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
+      (ok (= value result))))
+  (testing "(if t 1) should eval to 1"
+    (let* ((value 1)
+	   (form (make-instance 'conditional :condition t :then value))
+	   (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
       (ok (= value result)))))
+
+(deftest s-expressions
+  (testing "Read from (binding a (variable-binding-spec 1) (variable-read a))"
+    (with-read-symbol-syntax ()
+      (let* ((*package* (find-package :lisp-language-workbench))
+	     (form (read-form (read-from-string "(binding #^a (variable-binding-spec 1) (variable-read #^a))")))
+	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
+	(ok (= 1 result))))))

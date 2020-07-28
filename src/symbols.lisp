@@ -11,6 +11,7 @@
 
 (defvar *root-symbol* (make-instance 'symbol :name ""))
 (defvar *symbol-space* *root-symbol*)
+(defvar *read-symbol-syntax* nil)
 
 (defgeneric intern (name space))
 
@@ -52,12 +53,14 @@
 	 (symbol-name (with-output-to-string (s)
 			(loop
 			   (let ((whitespace '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout))
+				 (terminating-chars '(#\( #\) #\#))
 				 (ch (read-char stream nil)))
 			     (cond
 			       ((eql ch separator)
 				(setf continue t)
 				(return))
-			       ((or (null ch) (member ch whitespace :test #'eql))
+			       ((or (null ch) (member ch whitespace :test #'eql) (member ch terminating-chars :test #'eql))
+				(when ch (unread-char ch stream))
 				(return))
 			       (t (princ ch s)))))))
 	 (symbol (intern symbol-name symbol-space)))
@@ -65,3 +68,36 @@
 	(let ((*symbol-space* symbol))
 	  (read-symbol stream))
 	symbol)))
+
+(defvar *symbol-dispatch-macro-character* nil)
+(defvar *symbol-dispatch-sub-character* nil)
+
+(defmethod print-object ((object symbol) stream)
+  (cond
+    (*symbol-dispatch-macro-character*
+     (princ *symbol-dispatch-macro-character* stream)
+     (when *symbol-dispatch-sub-character*
+       (princ *symbol-dispatch-sub-character* stream))
+     (print-symbol object stream))
+    (*read-eval*
+     (princ "#.(read-symbol \"" stream)
+     (print-symbol object stream)
+     (princ "\")" stream))
+    (t (print-unreadable-object (object stream :type t :identity t)
+	 (print-symbol object stream))))
+  nil)
+
+(defmacro with-read-symbol-syntax ((&optional (dispatch-char #\#) (sub-char #\^)) &body body)
+  `(let ((*readtable* (copy-readtable))
+	 (*symbol-dispatch-macro-character* ,dispatch-char)
+	 (*symbol-dispatch-sub-character* ,sub-char))
+     ,(if sub-char
+	  `(set-dispatch-macro-character ,dispatch-char ,sub-char
+					 (lambda (stream sub-char infix)
+					   (declare (ignore sub-char infix))
+					   (read-symbol stream)))
+	  `(set-macro-character ,dispatch-char
+				(lambda (stream char)
+				  (declare (ignore char))
+				  (read-symbol stream))))
+     ,@body))

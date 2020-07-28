@@ -1,7 +1,7 @@
 (defsystem "lisp-language-workbench"
   :version "0.1.0"
-  :author ""
-  :license ""
+  :author "Alessio Stalla"
+  :license "AGPL"
   :depends-on ("closer-mop" "cl-unification" "fset")
   :components ((:module "src"
                 :components
@@ -11,8 +11,8 @@
   :in-order-to ((test-op (test-op "lisp-language-workbench/tests"))))
 
 (defsystem "lisp-language-workbench/tests"
-  :author ""
-  :license ""
+  :author "Alessio Stalla"
+  :license "AGPL"
   :depends-on ("lisp-language-workbench"
                "rove")
   :components ((:module "tests"
