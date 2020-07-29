@@ -15,9 +15,6 @@
   ((arguments :initform :arguments :reader function-arguments)
    (expression :initform :expression :reader function-expression)))
 
-(defclass closure (function)
-  ((environment :initform :environment :reader closure-environment)))
-
 (defclass function-access (form)
   ((function-designator :initarg :function :reader accessed-function-designator)))
 

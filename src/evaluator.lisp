@@ -21,9 +21,13 @@
 
 (defclass local-variable (binding-spec)
   ((value :initarg :value :reader local-variable-value)))
+(defclass local-function (binding-spec)
+  ((value :initarg :value :reader local-function-value)))
 
 (defmethod transform ((transformer simple-evaluator) (form variable-binding-spec) environment)
   (make-instance 'local-variable :value (transform transformer (variable-binding-init-form form) environment)))
+(defmethod transform ((transformer simple-evaluator) (form function-binding-spec) environment)
+  (make-instance 'local-function :value (transform transformer (function-binding-init-form form) environment)))
 
 (defmethod transform ((transformer simple-evaluator) (form variable-read) environment)
   (let* ((variable (accessed-variable-name form))
@@ -31,6 +35,21 @@
     (if meaning
 	(local-variable-value meaning)
 	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
+
+(defmethod transform ((transformer simple-evaluator) (form function) environment)
+  (let* ((args (function-arguments form))
+	 (body (function-expression form))
+	 (lisp-args (map 'list (lambda (s) (make-symbol (symbol-name s))) args))
+	 (fn `(lambda ,lisp-args
+		(transform ,transformer ,body
+			   (let ((env ,environment))
+			     ,@(loop :for i :from 0 :to (1- (length args))
+				  :collect `(setf env (augment-environment
+						       env ,(nth i args)
+						       (make-instance 'local-variable :value ,(nth i lisp-args)))))
+			     env)))))
+    (compile nil fn)))
+
 
 (defmethod transform ((transformer simple-evaluator) (form conditional) environment)
   (if (transform transformer (conditional-if form)   environment)

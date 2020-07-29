@@ -7,6 +7,13 @@
     `(,(class-name class) ,@(closer-mop:class-slots class))))
 
 (defun read-form (sexp)
+  (if (listp sexp)
+      (if (symbolp (car sexp))
+	  (read-complex-form sexp)
+	  (mapcar #'read-form sexp))
+      sexp))
+
+(defun read-complex-form (sexp)
   (let* ((form-class (find-class (car sexp)))
 	 (template (form-template (closer-mop:class-prototype form-class)))
 	 (slot-map (list))

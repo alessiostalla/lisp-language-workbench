@@ -69,6 +69,10 @@
 	  (read-symbol stream))
 	symbol)))
 
+(defun read-symbol-from-string (s)
+  (with-input-from-string (s s)
+    (read-symbol s)))
+
 (defvar *symbol-dispatch-macro-character* nil)
 (defvar *symbol-dispatch-sub-character* nil)
 
@@ -80,7 +84,9 @@
        (princ *symbol-dispatch-sub-character* stream))
      (print-symbol object stream))
     (*read-eval*
-     (princ "#.(read-symbol \"" stream)
+     (princ "#.(" stream)
+     (princ 'read-symbol-from-string stream)
+     (princ " \"" stream)
      (print-symbol object stream)
      (princ "\")" stream))
     (t (print-unreadable-object (object stream :type t :identity t)
