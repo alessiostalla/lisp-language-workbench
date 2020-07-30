@@ -85,7 +85,7 @@
      (print-symbol object stream))
     (*read-eval*
      (princ "#.(" stream)
-     (princ 'read-symbol-from-string stream)
+     (write 'read-symbol-from-string :stream stream)
      (princ " \"" stream)
      (print-symbol object stream)
      (princ "\")" stream))

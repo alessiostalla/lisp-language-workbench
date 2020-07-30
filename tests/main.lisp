@@ -11,7 +11,7 @@
   (testing "(= 1 1) should eval to true"
     (ok (= 1 1))))
 
-(deftest evaluator
+(deftest evaluator/basic
   (testing "Lisp objects (e.g., numbers) should eval to themselves"
     (ok (= 1 (transform (make-instance 'simple-evaluator) 1 *global-environment*))))
   
@@ -35,10 +35,17 @@
 	   (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
       (ok (= value result)))))
 
-(deftest s-expressions
-  (testing "Read from (binding a (variable-binding-spec 1) (variable-read a))"
+(deftest evaluator+reader
+  (testing "Evaluating the form read from '(binding a (variable-binding-spec 1) (variable-read a)) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :lisp-language-workbench))
 	     (form (read-form (read-from-string "(binding #^a (variable-binding-spec 1) (variable-read #^a))")))
 	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
+	(ok (= 1 result)))))
+  (testing "Evaluating the form read from '(binding #^f (function-binding-spec (function (#^x) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
+    (with-read-symbol-syntax ()
+      (let* ((*package* (find-package :lisp-language-workbench))
+	     (form (read-form (read-from-string "(binding #^f (function-binding-spec (function (#^x) (variable-read #^x))) (function-call #^f (1)))")))
+	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
 	(ok (= 1 result))))))
+

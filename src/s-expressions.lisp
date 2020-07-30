@@ -45,13 +45,18 @@
 (defclass sexp-transformer () ())
 (defmethod transform ((transformer sexp-transformer) form environment)
   form)
+(defmethod transform ((transformer sexp-transformer) (form list) environment)
+  (mapcar (lambda (form) (transform transformer form environment)) form))
 (defmethod transform ((transformer sexp-transformer) (form form) environment)
   (let ((template (form-template form)))
-    `(,(car template) ,@(mapcar (lambda (x)
-				  (if (typep x 'closer-mop:slot-definition)
-				      (transform transformer (slot-value form (closer-mop:slot-definition-name x)) environment)
-				      x))
-				template))))
+    (mapcar (lambda (x)
+	      (if (typep x 'closer-mop:slot-definition)
+		  (transform transformer (slot-value form (closer-mop:slot-definition-name x)) environment)
+		  x))
+	    template)))
+
+(defmethod print-object ((object form) stream)
+  (print `(read-form ',(transform (make-instance 'sexp-transformer) object *global-environment*)) stream))
 
 (defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat form) env)
   nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...
