@@ -5,8 +5,9 @@
   :depends-on ("closer-mop" "cl-unification" "fset")
   :components ((:module "src"
                 :components
-                ((:file "packages") (:file "main") (:file "symbols")
-		 (:file "forms") (:file "evaluator") (:file "s-expressions"))))
+                ((:file "packages") (:file "symbols")
+		 (:file "forms") (:file "main") (:file "evaluator")
+		 (:file "s-expressions"))))
   :description ""
   :in-order-to ((test-op (test-op "lisp-language-workbench/tests"))))
 

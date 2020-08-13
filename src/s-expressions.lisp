@@ -51,7 +51,9 @@
   (let ((template (form-template form)))
     (mapcar (lambda (x)
 	      (if (typep x 'closer-mop:slot-definition)
-		  (transform transformer (slot-value form (closer-mop:slot-definition-name x)) environment)
+		  (if (slot-boundp form (closer-mop:slot-definition-name x))
+		      (transform transformer (slot-value form (closer-mop:slot-definition-name x)) environment)
+		      nil)
 		  x))
 	    template)))
 

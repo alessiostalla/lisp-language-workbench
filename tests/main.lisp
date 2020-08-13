@@ -49,3 +49,10 @@
 	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
 	(ok (= 1 result))))))
 
+(deftest evaluator+environment
+  (testing "(the-global-environment) yields the global environment"
+    (with-read-symbol-syntax ()
+      (let* ((*package* (find-package :lisp-language-workbench))
+	     (form (read-form (read-from-string "(function-call #^the-global-environment)")))
+	     (result (transform (make-instance 'simple-evaluator) form *global-environment*)))
+	(ok (= *global-environment* result))))))

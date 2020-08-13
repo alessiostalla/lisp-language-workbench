@@ -1,16 +1,14 @@
 (in-package :lisp-language-workbench)
 
-(defclass environment ()
-  ((bindings :initform (fset:map) :initarg :bindings :reader environment-bindings)))
-
-(defun meaning (symbol kind environment)
-  (fset:@ (fset:@ (environment-bindings environment) symbol) kind))
-
-(defclass form () ())
-(defclass macro-form (form) ())
-
-(defgeneric transform (transformer form environment))
-(defmethod transform (transformer (form macro-form) environment)
-  (transform transformer (transform 'expand form environment) environment))
-
-(defvar *global-environment* (make-instance 'environment))
+(defun initial-environment ()
+  (let ((env (make-instance 'environment)))
+    (setf env (augment-environment
+	       env
+	       (intern "the-global-environment" *root-symbol*)
+	       'function
+	       (make-instance 'function-binding-spec
+			      :init-form (make-instance 'function
+							:arguments nil
+							:expression (make-instance 'lisp :expression '*global-environment*)))))
+    env))
+(defvar *global-environment* (initial-environment))
