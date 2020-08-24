@@ -58,7 +58,7 @@
 	    template)))
 
 (defmethod print-object ((object form) stream)
-  (print `(read-form ',(transform (make-instance 'sexp-transformer) object *global-environment*)) stream))
+  (print `(read-form ',(transform (make-instance 'sexp-transformer) object *environment*)) stream))
 
 (defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat form) env)
   nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...

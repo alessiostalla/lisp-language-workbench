@@ -42,12 +42,12 @@
 (defclass function-call (function-access)
   ((arguments :initarg :arguments :reader function-call-arguments)))
 
+(defclass definition (form) ())
+
 (defclass binding (form)
   ((name :initarg :name :reader binding-name)
-   (spec :initarg :spec :reader binding-spec :type binding-spec)
+   (definition :initarg :spec :reader definition :type definition)
    (body :initarg :body :reader binding-body)))
-
-(defclass binding-spec (form) ())
 
 (defun augment-environment (environment name kind meaning)
   (flet ((compute-meanings ()
@@ -60,16 +60,16 @@
 			      name
 			      (compute-meanings)))))
 
-(defclass variable-binding-spec (binding-spec)
-  ((init-form :initarg :init-form :initform nil :reader variable-binding-init-form)
+(defclass variable-definition (definition)
+  ((init-form :initarg :init-form :initform nil :reader variable-definition-init-form)
    (mutable? :initarg :mutable :initform nil :reader mutable?)))
-(defclass function-binding-spec (binding-spec)
-  ((init-form :initarg :init-form :initform nil :reader function-binding-init-form)))
+(defclass function-definition (definition)
+  ((init-form :initarg :init-form :initform nil :reader function-definition-init-form)))
 
-(defgeneric binding-spec-kind (transformer binding-spec))
-(defmethod binding-spec-kind (transformer (binding-spec variable-binding-spec))
+(defgeneric definition-kind (transformer definition))
+(defmethod definition-kind (transformer (definition variable-definition))
   'variable)
-(defmethod binding-spec-kind (transformer (binding-spec function-binding-spec))
+(defmethod definition-kind (transformer (definition function-definition))
   'function)
 
 (defun default-transform-binding (transformer form environment)
@@ -77,8 +77,8 @@
    (transform transformer (binding-body form)
 	      (augment-environment environment
 				   (binding-name form)
-				   (binding-spec-kind transformer (binding-spec form))
-				   (transform transformer (binding-spec form) environment)))
+				   (definition-kind transformer (definition form))
+				   (transform transformer (definition form) environment)))
    environment))
 
 (defclass conditional-branch ()

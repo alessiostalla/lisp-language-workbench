@@ -17,14 +17,14 @@
 (defclass interpreted-function (function)
   ((lisp-function :initarg :lisp-function :reader lisp-function)))
 
-(defmethod transform ((transformer simple-evaluator) (form variable-binding-spec) environment)
-  (let ((value (transform transformer (variable-binding-init-form form) environment)))
+(defmethod transform ((transformer simple-evaluator) (form variable-definition) environment)
+  (let ((value (transform transformer (variable-definition-init-form form) environment)))
     (make-instance 'box :value value)))
-(defmethod transform ((transformer simple-evaluator) (form function-binding-spec) environment)
-  (let ((function (transform transformer (function-binding-init-form form) environment)))
+(defmethod transform ((transformer simple-evaluator) (form function-definition) environment)
+  (let ((function (transform transformer (function-definition-init-form form) environment)))
     (typecase function
-      (function (make-instance 'interpreted-function :lisp-function (transform transformer function environment))) ;TODO copy function metadata
-      (cl:function (make-instance 'interpreted-function :lisp-function function))
+      (interpreted-function function)
+      (function (transform transformer function environment))
       (t (error "Not a function: ~S" function))))) ;TODO specific condition
 
 (defmethod transform ((transformer simple-evaluator) (form variable-read) environment)
@@ -48,7 +48,9 @@
 						       env ,(nth i args) 'variable
 						       (make-instance 'box :value ,(nth i lisp-args))))) ;TODO should they be constant?
 			     env)))))
-    (compile nil fn)))
+    (make-instance 'interpreted-function
+		   :arguments (function-arguments form)
+		   :lisp-function (compile nil fn))))
 
 (defmethod transform ((transformer simple-evaluator) (form function-call) environment)
   (flet ((to-lisp-function (designator)

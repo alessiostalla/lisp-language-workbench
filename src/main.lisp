@@ -6,9 +6,8 @@
 	       env
 	       (intern "the-global-environment" *root-symbol*)
 	       'function
-	       (make-instance 'function-binding-spec
-			      :init-form (make-instance 'function
-							:arguments nil
-							:expression (make-instance 'lisp :expression '*global-environment*)))))
+	       (make-instance 'function
+			      :arguments nil
+			      :expression (make-instance 'lisp :expression '*environment*))))
     env))
-(defvar *global-environment* (initial-environment))
+(defvar *environment* (initial-environment))
