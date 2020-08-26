@@ -7,11 +7,8 @@
   (fset:@ (fset:@ (environment-bindings environment) symbol) kind))
 
 (defclass form () ())
-(defclass macro-form (form) ())
 
 (defgeneric transform (transformer form environment))
-(defmethod transform (transformer (form macro-form) environment)
-  (transform transformer (transform 'expand form environment) environment))
 
 (defclass constant (form)
   ((value :initarg :value :reader constant-value)))
@@ -34,6 +31,12 @@
 (defclass constant (form)
   ((value :initarg :value :reader constant-value)))
 
+;; TODO a macro is not like in Lisp superficially like a function call.
+;; It's a new form (class).
+;;(defclass macro (form)
+;;  ((arguments :initarg :arguments :reader macro-arguments)
+;;   (expression :initarg :expression :reader macro-expression)))
+
 (defclass function-access (form)
   ((function-designator :initarg :function :reader accessed-function-designator)))
 
@@ -42,12 +45,17 @@
 (defclass function-call (function-access)
   ((arguments :initarg :arguments :reader function-call-arguments)))
 
+;;Environment and definitions
 (defclass definition (form) ())
 
 (defclass binding (form)
   ((name :initarg :name :reader binding-name)
-   (definition :initarg :spec :reader definition :type definition)
+   (definition :initarg :spec :reader binding-definition :type definition)
    (body :initarg :body :reader binding-body)))
+
+(defclass install-definition! (form)
+  ((name :initarg :name :reader definition-name)
+   (definition :initarg :spec :reader definition-definition :type definition)))
 
 (defun augment-environment (environment name kind meaning)
   (flet ((compute-meanings ()
@@ -72,22 +80,45 @@
 (defmethod definition-kind (transformer (definition function-definition))
   'function)
 
-(defun default-transform-binding (transformer form environment)
-  (values
-   (transform transformer (binding-body form)
-	      (augment-environment environment
-				   (binding-name form)
-				   (definition-kind transformer (definition form))
-				   (transform transformer (definition form) environment)))
-   environment))
-
-(defclass conditional-branch ()
-  ())
-
-(defclass conditional (form)
-  ((condition :initarg :condition :reader conditional-if)
-   (then :initarg :then :reader conditional-then)
-   (else :initarg :else :reader conditional-else)))
-
 (defclass lisp (form)
   ((expression :initarg :expression :initform nil :reader lisp-expression)))
+
+(defun initial-environment ()
+  (let ((env (make-instance 'environment)))
+    (setf env (augment-environment
+	       env
+	       (intern "the-global-environment" *root-symbol*)
+	       'function
+	       (make-instance 'function
+			      :arguments nil
+			      :expression (make-instance 'lisp :expression '*environment*))))
+    env))
+(defvar *environment* (initial-environment))
+
+(defun default-transform-binding (transformer form environment)
+  (transform transformer (binding-body form)
+	     (augment-environment environment
+				  (binding-name form)
+				  (definition-kind transformer (binding-definition form))
+				  (transform transformer (binding-definition form) environment))))
+
+(defun default-transform-definition! (transformer form environment)
+  (setf *environment*
+	(augment-environment *environment*
+			     (definition-name form)
+			     (definition-kind transformer (definition-definition form))
+			     (transform transformer (definition-definition form) environment))))
+
+;;Common forms
+(defclass conditional (form)
+  ((condition :initarg :condition :reader conditional-if)
+   (then :initarg :then :reader conditional-then :type form :initform nil)
+   (else :initarg :else :reader conditional-else :type form :initform nil)))
+
+(defclass loop (form)
+  ((name :initarg :name :reader loop-name :initform nil)
+   (body :initarg :body :reader loop-body)))
+
+(defclass loop-break (form)
+  ((loop-name :initarg :loop-name :reader loop-name :initform nil)
+   (return-form :initarg :return :reader return-form :initform nil)))

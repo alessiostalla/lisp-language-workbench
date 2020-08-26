@@ -1,6 +1,6 @@
 (defpackage lisp-language-workbench
   (:use :cl)
-  (:shadow cl:find-symbol cl:function cl:intern cl:symbol cl:symbol-name)
+  (:shadow cl:find-symbol cl:function cl:intern cl:loop cl:symbol cl:symbol-name)
   (:export #:find-symbol #:intern #:*root-symbol* #:symbol
 	   #:binding #:conditional #:variable-definition
 	   #:variable-access #:variable-read #:variable-write

@@ -10,6 +10,9 @@
 
 (defmethod transform ((transformer simple-evaluator) (form binding) environment)
   (default-transform-binding transformer form environment))
+(defmethod transform ((transformer simple-evaluator) (form install-definition!) environment)
+  (default-transform-definition! transformer form environment))
+
 
 (defclass box ()
   ((value :initarg :value :accessor box-value)))
@@ -43,7 +46,7 @@
 	 (fn `(lambda ,lisp-args
 		(transform ,transformer ,body
 			   (let ((env ,environment))
-			     ,@(loop :for i :from 0 :to (1- (length args))
+			     ,@(cl:loop :for i :from 0 :to (1- (length args))
 				  :collect `(setf env (augment-environment
 						       env ,(nth i args) 'variable
 						       (make-instance 'box :value ,(nth i lisp-args))))) ;TODO should they be constant?
@@ -70,9 +73,16 @@
       (apply lisp-function (map 'list (lambda (a) (transform transformer a environment)) (function-call-arguments form))))))
 
 (defmethod transform ((transformer simple-evaluator) (form conditional) environment)
-  (if (transform transformer (conditional-if form)   environment)
+  (if (transform transformer (conditional-if   form) environment)
       (transform transformer (conditional-then form) environment)
       (transform transformer (conditional-else form) environment)))
+
+(defmethod transform ((transformer simple-evaluator) (form loop) environment)
+  (catch (loop-name form)    
+    (cl:loop (transform transformer (loop-body form) environment))))
+
+(defmethod transform ((transformer simple-evaluator) (form loop-break) environment)
+  (throw (loop-name form) (transform transformer (return-form form) environment)))
 
 (defmethod transform ((transformer simple-evaluator) (form lisp) environment)
   (declare (ignore environment transformer))

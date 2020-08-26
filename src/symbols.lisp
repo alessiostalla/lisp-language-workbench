@@ -51,7 +51,7 @@
 			   *symbol-space*))
 	 continue
 	 (symbol-name (with-output-to-string (s)
-			(loop
+			(cl:loop
 			   (let ((whitespace '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout))
 				 (terminating-chars '(#\( #\) #\#))
 				 (ch (read-char stream nil)))
