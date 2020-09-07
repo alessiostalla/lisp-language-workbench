@@ -1,11 +1,11 @@
-(defpackage lisp-language-workbench/tests/main
+(defpackage treep/tests/main
   (:use :cl
-        :lisp-language-workbench
+        :treep
         :rove)
-  (:shadowing-import-from :lisp-language-workbench find-symbol intern symbol))
-(in-package :lisp-language-workbench/tests/main)
+  (:shadowing-import-from :treep find-symbol intern symbol))
+(in-package :treep/tests/main)
 
-;; NOTE: To run this test file, execute `(asdf:test-system :lisp-language-workbench)' in your Lisp.
+;; NOTE: To run this test file, execute `(asdf:test-system :treep)' in your Lisp.
 
 (deftest smoke-test
   (testing "(= 1 1) should eval to true"
@@ -38,13 +38,13 @@
 (deftest evaluator+reader
   (testing "Evaluating the form read from '(binding a (variable-definition 1) (variable-read a)) should eval to 1"
     (with-read-symbol-syntax ()
-      (let* ((*package* (find-package :lisp-language-workbench))
+      (let* ((*package* (find-package :treep))
 	     (form (read-form (read-from-string "(binding #^a (variable-definition 1) (variable-read #^a))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result)))))
   (testing "Evaluating the form read from '(binding #^f (function-definition (function (#^x) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
     (with-read-symbol-syntax ()
-      (let* ((*package* (find-package :lisp-language-workbench))
+      (let* ((*package* (find-package :treep))
 	     (form (read-form (read-from-string "(binding #^f (function-definition (function (#^x) (variable-read #^x))) (function-call #^f (1)))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result))))))
@@ -52,7 +52,7 @@
 (deftest evaluator+environment
   (testing "(the-global-environment) yields the global environment"
     (with-read-symbol-syntax ()
-      (let* ((*package* (find-package :lisp-language-workbench))
+      (let* ((*package* (find-package :treep))
 	     (form (read-form (read-from-string "(function-call #^the-global-environment)")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (eq *environment* result))))))

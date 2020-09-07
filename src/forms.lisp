@@ -1,4 +1,4 @@
-(in-package :lisp-language-workbench)
+(in-package :treep)
 
 (defclass environment ()
   ((bindings :initform (fset:map) :initarg :bindings :reader environment-bindings)))

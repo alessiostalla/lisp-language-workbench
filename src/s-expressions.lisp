@@ -1,4 +1,4 @@
-(in-package :lisp-language-workbench)
+(in-package :treep)
 
 (defgeneric form-template (form))
 

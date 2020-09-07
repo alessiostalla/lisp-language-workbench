@@ -1,4 +1,4 @@
-(in-package :lisp-language-workbench)
+(in-package :treep)
 
 (defclass symbol-space ()
   ((name :reader symbol-space-name :initarg :name :type symbol)

@@ -1,4 +1,4 @@
-(defpackage lisp-language-workbench
+(defpackage treep
   (:use :cl)
   (:shadow cl:find-symbol cl:function cl:intern cl:loop cl:symbol cl:symbol-name)
   (:export #:find-symbol #:intern #:*root-symbol* #:symbol

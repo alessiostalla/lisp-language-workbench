@@ -1,4 +1,4 @@
-(defsystem "lisp-language-workbench"
+(defsystem "treep"
   :version "0.1.0"
   :author "Alessio Stalla"
   :license "AGPL"
@@ -9,15 +9,15 @@
 		 (:file "forms") (:file "evaluator")
 		 (:file "s-expressions"))))
   :description ""
-  :in-order-to ((test-op (test-op "lisp-language-workbench/tests"))))
+  :in-order-to ((test-op (test-op "treep/tests"))))
 
-(defsystem "lisp-language-workbench/tests"
+(defsystem "treep/tests"
   :author "Alessio Stalla"
   :license "AGPL"
-  :depends-on ("lisp-language-workbench"
+  :depends-on ("treep"
                "rove")
   :components ((:module "tests"
                 :components
                 ((:file "main"))))
-  :description "Test system for lisp-language-workbench"
+  :description "Test system for treep"
   :perform (test-op (op c) (symbol-call :rove :run c)))
