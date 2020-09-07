@@ -40,19 +40,22 @@
 	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
 
 (defmethod transform ((transformer simple-evaluator) (form function) environment)
-  (let* ((args (function-arguments form))
+  (let* ((lambda-list (function-lambda-list form))
 	 (body (function-expression form))
-	 (lisp-args (map 'list (lambda (s) (make-symbol (symbol-name s))) args)) ;TODO function argument forms!
+	 (lisp-args (fset:convert 'list (fset:image
+					 (lambda (a) (make-symbol (symbol-name (function-argument-name a))))
+					 lambda-list)))
 	 (fn `(lambda ,lisp-args
+		;;TODO declare args ignorable?
 		(transform ,transformer ,body
 			   (let ((env ,environment))
-			     ,@(cl:loop :for i :from 0 :to (1- (length args))
+			     ,@(cl:loop :for i :from 0 :to (1- (fset:size lambda-list))
 				  :collect `(setf env (augment-environment
-						       env ,(nth i args) 'variable
+						       env ,(function-argument-name (fset:@ lambda-list i)) 'variable
 						       (make-instance 'box :value ,(nth i lisp-args))))) ;TODO should they be constant?
 			     env)))))
     (make-instance 'interpreted-function
-		   :arguments (function-arguments form)
+		   :lambda-list (function-lambda-list form)
 		   :lisp-function (compile nil fn))))
 
 (defmethod transform ((transformer simple-evaluator) (form function-call) environment)
@@ -70,7 +73,11 @@
 			  (error (format nil "Unknown function: ~A" (with-output-to-string (out) (print-symbol function-designator out))))) ;TODO proper condition class
 			(to-lisp-function meaning)))
 	      (t (to-lisp-function (transform transformer function-designator environment))))))
-      (apply lisp-function (map 'list (lambda (a) (transform transformer a environment)) (function-call-arguments form))))))
+      (apply lisp-function (fset:convert
+			    'list
+			    (fset:image
+			     (lambda (a) (transform transformer a environment))
+			     (function-arguments form)))))))
 
 (defmethod transform ((transformer simple-evaluator) (form conditional) environment)
   (if (transform transformer (conditional-if   form) environment)

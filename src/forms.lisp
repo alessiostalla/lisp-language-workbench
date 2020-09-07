@@ -21,8 +21,12 @@
 (defclass variable-write (variable-access)
   ((form :initarg :form)))
 
+(defclass function-argument (form)
+  ((name :initarg :name :reader function-argument-name :type symbol)
+   (default-value :initarg :default-value :initform nil :reader function-argument-default-value)))
+
 (defclass function (form)
-  ((arguments :initarg :arguments :reader function-arguments)
+  ((lambda-list :initarg :lambda-list :initform (fset:seq) :reader function-lambda-list)
    (expression :initarg :expression :reader function-expression)))
 
 (defclass variable (form)
@@ -43,7 +47,7 @@
 (defclass function-reference (function-access) ())
 
 (defclass function-call (function-access)
-  ((arguments :initarg :arguments :reader function-call-arguments)))
+  ((arguments :initarg :arguments :reader function-arguments)))
 
 ;;Environment and definitions
 (defclass definition (form) ())
@@ -90,7 +94,6 @@
 	       (intern "the-global-environment" *root-symbol*)
 	       'function
 	       (make-instance 'function
-			      :arguments nil
 			      :expression (make-instance 'lisp :expression '*environment*))))
     env))
 (defvar *environment* (initial-environment))

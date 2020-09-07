@@ -10,7 +10,7 @@
   (if (listp sexp)
       (if (symbolp (car sexp))
 	  (read-complex-form sexp)
-	  (mapcar #'read-form sexp))
+	  (fset:convert 'fset:seq (mapcar #'read-form sexp)))
       sexp))
 
 (defun read-complex-form (sexp)

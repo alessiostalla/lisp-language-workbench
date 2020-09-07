@@ -42,10 +42,10 @@
 	     (form (read-form (read-from-string "(binding #^a (variable-definition 1) (variable-read #^a))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result)))))
-  (testing "Evaluating the form read from '(binding #^f (function-definition (function (#^x) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
+  (testing "Evaluating the form read from '(binding #^f (function-definition (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding #^f (function-definition (function (#^x) (variable-read #^x))) (function-call #^f (1)))")))
+	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1)))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result))))))
 
