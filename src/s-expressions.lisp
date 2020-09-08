@@ -64,3 +64,7 @@
   nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...
 (defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat symbol) env)
   nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...
+(defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat fset:seq) env)
+  (fset:find var pat))
+(defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat fset:wb-seq) env)
+  (fset:find var pat))

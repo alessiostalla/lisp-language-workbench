@@ -10,6 +10,13 @@
 
 (defgeneric transform (transformer form environment))
 
+(defclass quote (form)
+  ((form :initarg :form :reader quoted-form)))
+
+(defmethod transform (transformer (form quote) environment)
+  (declare (ignore transformer environment))
+  form)
+
 (defclass constant (form)
   ((value :initarg :value :reader constant-value)))
 
@@ -35,11 +42,22 @@
 (defclass constant (form)
   ((value :initarg :value :reader constant-value)))
 
-;; TODO a macro is not like in Lisp superficially like a function call.
+;; A macro is not like in Lisp, i.e., superficially like a function call.
 ;; It's a new form (class).
-;;(defclass macro (form)
-;;  ((arguments :initarg :arguments :reader macro-arguments)
-;;   (expression :initarg :expression :reader macro-expression)))
+(defclass macro (form) ())
+
+(defgeneric expand (form environment))
+(defmethod expand ((form macro) environment)
+  (error "No expansion for ~A" form))
+(defmethod expand (form environment)
+  (declare (ignore environment))
+  form)
+
+(defmethod transform (transformer (form macro) environment)
+  (let ((expanded (expand form environment)))
+    (if (eq expanded form)
+	(transform transformer form environment)
+	(default-transform-macro transformer expanded environment))))
 
 (defclass function-access (form)
   ((function-designator :initarg :function :reader accessed-function-designator)))
@@ -72,11 +90,16 @@
 			      name
 			      (compute-meanings)))))
 
+;;TODO Should this inherit from variable?
 (defclass variable-definition (definition)
   ((init-form :initarg :init-form :initform nil :reader variable-definition-init-form)
    (mutable? :initarg :mutable :initform nil :reader mutable?)))
+;;TODO should we use function directly? Or inherit from it?
 (defclass function-definition (definition)
   ((init-form :initarg :init-form :initform nil :reader function-definition-init-form)))
+(defclass macro-definition (definition)
+  ((slot-definitions :initarg :slot-definitions :reader macro-definition-slots)
+   (expander-function :initarg :expander-function :reader macro-definition-expander-function)))
 
 (defgeneric definition-kind (transformer definition))
 (defmethod definition-kind (transformer (definition variable-definition))
@@ -98,14 +121,14 @@
     env))
 (defvar *environment* (initial-environment))
 
-(defun default-transform-binding (transformer form environment)
+(defmethod transform (transformer (form binding) environment)
   (transform transformer (binding-body form)
 	     (augment-environment environment
 				  (binding-name form)
 				  (definition-kind transformer (binding-definition form))
 				  (transform transformer (binding-definition form) environment))))
 
-(defun default-transform-definition! (transformer form environment)
+(defmethod transform (transformer (form definition) environment)
   (setf *environment*
 	(augment-environment *environment*
 			     (definition-name form)

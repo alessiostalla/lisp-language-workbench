@@ -4,15 +4,8 @@
 
 (defmethod transform ((transformer simple-evaluator) form environment)
   (if (typep form 'form)
-      (error "Don't know how to eval: ~S" form)
-      ;Lisp objects are self-evaluating
-      form))
-
-(defmethod transform ((transformer simple-evaluator) (form binding) environment)
-  (default-transform-binding transformer form environment))
-(defmethod transform ((transformer simple-evaluator) (form install-definition!) environment)
-  (default-transform-definition! transformer form environment))
-
+      (call-next-method)
+      form)) ;Lisp objects are self-evaluating
 
 (defclass box ()
   ((value :initarg :value :accessor box-value)))
