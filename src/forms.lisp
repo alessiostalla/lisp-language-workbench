@@ -6,7 +6,15 @@
 (defun meaning (symbol kind environment)
   (fset:@ (fset:@ (environment-bindings environment) symbol) kind))
 
-(defclass form () ())
+(defclass form ()
+  ((parent :accessor form-parent)))
+
+(defmethod initialize-instance :after ((instance form) &key &allow-other-keys)
+  (cl:loop
+     :for slot :in (closer-mop:class-slots (class-of instance))
+     :do (let ((name (closer-mop:slot-definition-name slot)))
+	   (if (and (slot-boundp instance name) (typep (slot-value instance name) 'form))
+	       (setf (form-parent (slot-value instance name)) instance)))))
 
 (defgeneric transform (transformer form environment))
 
@@ -44,20 +52,15 @@
 
 ;; A macro is not like in Lisp, i.e., superficially like a function call.
 ;; It's a new form (class).
-(defclass macro (form) ())
+(defclass macro (form)
+  ((expansion :initarg :expansion :reader macro-expansion)))
 
-(defgeneric expand (form environment))
-(defmethod expand ((form macro) environment)
-  (error "No expansion for ~A" form))
-(defmethod expand (form environment)
-  (declare (ignore environment))
-  form)
+(defun make-form-class (name &optional (superclass (find-class 'form)))
+  (make-instance 'standard-class :name name :direct-superclasses (list superclass)))
 
 (defmethod transform (transformer (form macro) environment)
-  (let ((expanded (expand form environment)))
-    (if (eq expanded form)
-	(transform transformer form environment)
-	(default-transform-macro transformer expanded environment))))
+  (let ((expanded (funcall (macro-expansion form) form environment)))
+    (transform transformer expanded environment)))
 
 (defclass function-access (form)
   ((function-designator :initarg :function :reader accessed-function-designator)))
@@ -72,12 +75,12 @@
 
 (defclass binding (form)
   ((name :initarg :name :reader binding-name)
-   (definition :initarg :spec :reader binding-definition :type definition)
+   (definition :initarg :definition :reader binding-definition :type definition)
    (body :initarg :body :reader binding-body)))
 
 (defclass install-definition! (form)
   ((name :initarg :name :reader definition-name)
-   (definition :initarg :spec :reader definition-definition :type definition)))
+   (definition :initarg :definition :reader definition-definition :type definition)))
 
 (defun augment-environment (environment name kind meaning)
   (flet ((compute-meanings ()

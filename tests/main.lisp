@@ -11,13 +11,20 @@
   (testing "(= 1 1) should eval to true"
     (ok (= 1 1))))
 
+(deftest forms-test
+  (testing "Nested forms have the enclosing form as parent"
+    (let* ((def (make-instance 'variable-definition))
+	   (var (intern "a" *root-symbol*))
+	   (form (make-instance 'binding :name var :definition def)))
+      (ok (eq (form-parent def) form)))))
+
 (deftest evaluator/basic
   (testing "Lisp objects (e.g., numbers) should eval to themselves"
     (ok (= 1 (transform (make-instance 'simple-evaluator) 1 *environment*))))
   
   (testing "(binding ((var a)) a) should eval to nil"
     (let* ((var (intern "a" *root-symbol*))
-	   (form (make-instance 'binding :name var :spec (make-instance 'variable-definition)
+	   (form (make-instance 'binding :name var :definition (make-instance 'variable-definition)
 				:body (make-instance 'variable-read :name var)))
 	   (result (transform (make-instance 'simple-evaluator) form *environment*)))
       (ok (null result))))
@@ -25,7 +32,7 @@
   (testing "(binding ((var a 1)) a) should eval to 1"
     (let* ((var (intern "a" *root-symbol*))
 	   (value 1)
-	   (form (make-instance 'binding :name var :spec (make-instance 'variable-definition :init-form value)
+	   (form (make-instance 'binding :name var :definition (make-instance 'variable-definition :init-form value)
 				:body (make-instance 'variable-read :name var)))
 	   (result (transform (make-instance 'simple-evaluator) form *environment*)))
       (ok (= value result))))
@@ -36,7 +43,7 @@
       (ok (= value result)))))
 
 (deftest evaluator+reader
-  (testing "Evaluating the form read from '(binding a (variable-definition 1) (variable-read a)) should eval to 1"
+  (testing "Evaluating the form read from '(binding #^a (variable-definition 1) (variable-read #^a)) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
 	     (form (read-form (read-from-string "(binding #^a (variable-definition 1) (variable-read #^a))")))

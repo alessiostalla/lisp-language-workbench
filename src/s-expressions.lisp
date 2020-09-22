@@ -4,7 +4,7 @@
 
 (defmethod form-template ((form form))
   (let ((class (class-of form)))
-    `(,(class-name class) ,@(closer-mop:class-slots class))))
+    `(,(class-name class) ,@(cdr (closer-mop:class-slots class))))) ;Exclude the parent slot (TODO make more robust)
 
 (defun read-form (sexp)
   (if (listp sexp)
