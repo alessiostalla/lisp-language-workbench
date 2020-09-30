@@ -13,7 +13,7 @@
   (cl:loop
      :for slot :in (closer-mop:class-slots (class-of instance))
      :do (let ((name (closer-mop:slot-definition-name slot)))
-	   (if (and (slot-boundp instance name) (typep (slot-value instance name) 'form))
+	   (if (and (not (eq name 'parent)) (slot-boundp instance name) (typep (slot-value instance name) 'form))
 	       (setf (form-parent (slot-value instance name)) instance)))))
 
 (defgeneric transform (transformer form environment))
