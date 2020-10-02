@@ -32,12 +32,35 @@
 	    (error "BUG! Not a variable: ~S" meaning)) ;TODO proper condition class
 	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
 
+(defun check-function-lambda-list (ll)
+  (let (found-optional found-rest)
+    (fset:image (lambda (arg)
+		  (when found-rest
+		    (error "No further arguments allowed after the rest argument: ~A" arg)) ;TODO specific condition class
+		  (etypecase arg
+		    (optional-function-argument (setf found-optional t))
+		    (rest-function-argument (setf found-rest t))
+		    (function-argument
+		     (when found-optional
+		       (error "No further regular arguments allowed after first optional argument: ~A" arg))))) ;TODO specific condition class
+		ll)
+    ll))
+
+(defun to-lisp-lambda-list (lambda-list)
+  (let ((result (list)) &optional-p)
+    (fset:do-seq (arg lambda-list)
+      (when (and (not &optional-p) (typep arg 'optional-function-argument))
+	(push '&optional result)
+	(setf &optional-p t))
+      (when (typep arg 'rest-function-argument)
+	(push '&rest result))
+      (push (make-symbol (symbol-name (function-argument-name arg))) result))
+    (nreverse result)))
+
 (defmethod transform ((transformer simple-evaluator) (form function) environment)
-  (let* ((lambda-list (function-lambda-list form))
+  (let* ((lambda-list (check-function-lambda-list (function-lambda-list form)))
 	 (body (function-expression form))
-	 (lisp-args (fset:convert 'list (fset:image
-					 (lambda (a) (make-symbol (symbol-name (function-argument-name a))))
-					 lambda-list)))
+	 (lisp-args (to-lisp-lambda-list lambda-list))
 	 (fn `(lambda ,lisp-args
 		;;TODO declare args ignorable?
 		(transform ,transformer ,body

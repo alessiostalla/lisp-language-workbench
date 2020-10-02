@@ -37,8 +37,12 @@
   ((form :initarg :form)))
 
 (defclass function-argument (form)
-  ((name :initarg :name :reader function-argument-name :type symbol)
-   (default-value :initarg :default-value :initform nil :reader function-argument-default-value)))
+  ((name :initarg :name :reader function-argument-name :type symbol)))
+
+(defclass optional-function-argument (function-argument)
+  ((default-value :initarg :default-value :initform nil :reader function-argument-default-value)))
+
+(defclass rest-function-argument (function-argument) ())
 
 (defclass function (form)
   ((lambda-list :initarg :lambda-list :initform (fset:seq) :reader function-lambda-list)
@@ -71,7 +75,8 @@
   ((arguments :initarg :arguments :reader function-arguments)))
 
 ;;Environment and definitions
-(defclass definition (form) ())
+(defclass definition (form)
+  ((documentation :initform nil :initarg :documentation :accessor definition-documentation)))
 
 (defclass binding (form)
   ((name :initarg :name :reader binding-name)
