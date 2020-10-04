@@ -63,3 +63,18 @@
 	     (form (read-form (read-from-string "(function-call #^the-global-environment)")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (eq *environment* result))))))
+
+
+(deftest evaluator-function-call-protocol
+  (testing "An optional function argument with no default, which is not provided, evaluates to nil"
+    (with-read-symbol-syntax ()
+      (let* ((*package* (find-package :treep))
+	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((optional-function-argument #^x)) (variable-read #^x))) (function-call #^f ()))")))
+	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
+	(ok (null result)))))
+  (testing "An optional function argument which is not provided evaluates to its default value"
+    (with-read-symbol-syntax ()
+      (let* ((*package* (find-package :treep))
+	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((optional-function-argument #^x (function-call #^the-global-environment))) (variable-read #^x))) (function-call #^f ()))")))
+	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
+	(ok (eq *environment* result))))))
