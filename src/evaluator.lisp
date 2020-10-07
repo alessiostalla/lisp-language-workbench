@@ -47,30 +47,32 @@
     ll))
 
 (defun to-lisp-lambda-list (lambda-list transformer environment)
-  (let ((result (list)) (symbols (list)) &optional-p)
+  (let ((result (list)) (symbols (list)) &optional-p rest-var)
     (fset:do-seq (arg lambda-list)
-      (when (and (not &optional-p) (typep arg 'optional-function-argument))
-	(push '&optional result)
-	(setf &optional-p t)
-	(when (function-argument-default-value arg)
-	  (let ((symbol (make-symbol (symbol-name (function-argument-name arg)))))
+      (let ((symbol (make-symbol (symbol-name (function-argument-name arg)))))
+	(when (typep arg 'optional-function-argument)
+	  (when (not &optional-p)
+	    (push '&optional result)
+	    (setf &optional-p t))
+	  (when (function-argument-default-value arg)
 	    (push (list symbol`(transform ,transformer ,(function-argument-default-value arg) ,environment))
 		  result)
-	    (push symbol symbols))
-	  (return)))
-      (when (typep arg 'rest-function-argument)
-	(push '&rest result))
-      (let ((symbol (make-symbol (symbol-name (function-argument-name arg)))))
+	    (push symbol symbols)
+	    (return)))
+	(when (typep arg 'rest-function-argument)
+	  (push '&rest result)
+	  (setf rest-var symbol))
 	(push symbol result)
 	(push symbol symbols)))
     (values
      (nreverse result)
-     (nreverse symbols))))
+     (nreverse symbols)
+     rest-var)))
 
 (defmethod transform ((transformer simple-evaluator) (form function) environment)
   (let ((lambda-list (check-function-lambda-list (function-lambda-list form)))
 	(body (function-expression form)))
-    (multiple-value-bind (lisp-args variables)
+    (multiple-value-bind (lisp-args variables rest-var)
 	(to-lisp-lambda-list lambda-list transformer environment)
       (let ((fn `(lambda ,lisp-args
 		   ;;TODO declare args ignorable?
@@ -79,7 +81,10 @@
 				,@(cl:loop :for i :from 0 :to (1- (fset:size lambda-list))
 					   :collect `(setf env (augment-environment
 								env ,(function-argument-name (fset:@ lambda-list i)) 'variable
-								(make-instance 'box :value ,(nth i variables))))) ;TODO should they be constant?
+								(make-instance 'box :value ,(let ((var (nth i variables)))
+											      (if (eq var rest-var)
+												  `(fset:convert 'fset:seq ,var)
+												  var)))))) ;TODO should they be constant?
 				env)))))
 	(make-instance 'interpreted-function
 		       :lambda-list (function-lambda-list form)
