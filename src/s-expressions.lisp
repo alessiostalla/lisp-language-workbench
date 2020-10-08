@@ -52,6 +52,8 @@
   form)
 (defmethod transform ((transformer sexp-transformer) (form list) environment)
   (mapcar (lambda (form) (transform transformer form environment)) form))
+(defmethod transform ((transformer sexp-transformer) (form fset:seq) environment)
+  (fset:convert 'list (fset:image (lambda (form) (transform transformer form environment)) form)))
 (defmethod transform ((transformer sexp-transformer) (form form) environment)
   (let ((template (form-template form)))
     (mapcar (lambda (x)

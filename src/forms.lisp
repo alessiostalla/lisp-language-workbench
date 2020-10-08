@@ -116,7 +116,8 @@
   'function)
 
 (defclass lisp (form)
-  ((expression :initarg :expression :initform nil :reader lisp-expression)))
+  ((expression :initarg :expression :initform nil :reader lisp-expression)
+   (variables :initarg :variables :initform (fset:seq) :reader lisp-variables)))
 
 (defun initial-environment ()
   (let ((env (make-instance 'environment)))

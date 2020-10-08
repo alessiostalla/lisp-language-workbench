@@ -124,5 +124,11 @@
   (throw (loop-name form) (transform transformer (return-form form) environment)))
 
 (defmethod transform ((transformer simple-evaluator) (form lisp) environment)
-  (declare (ignore environment transformer))
-  (eval (lisp-expression form)))
+  (common-lisp:eval `(let ,(fset:convert
+			    'list
+			    (fset:image
+			     (lambda (v)
+			       (list (fset:@ v 0)
+				     (transform transformer (make-instance 'variable-read :name (fset:@ v 1)) environment)))
+			     (lisp-variables form)))
+		       ,(lisp-expression form))))
