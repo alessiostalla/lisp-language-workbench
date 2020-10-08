@@ -4,7 +4,9 @@
   ((bindings :initform (fset:map) :initarg :bindings :reader environment-bindings)))
 
 (defun meaning (symbol kind environment)
-  (fset:@ (fset:@ (environment-bindings environment) symbol) kind))
+  (let ((meanings (fset:@ (environment-bindings environment) symbol)))
+    (when meanings
+      (fset:@ meanings kind))))
 
 (defclass form ()
   ((parent :accessor form-parent)))
