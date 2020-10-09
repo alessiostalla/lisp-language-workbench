@@ -3,7 +3,7 @@
   :author "Alessio Stalla"
   :license "AGPL"
   :depends-on ("closer-mop" "cl-unification" "fset")
-  :components ((:module "src"
+  :components ((:module "src/level0"
                 :components
                 ((:file "packages") (:file "symbols")
 		 (:file "forms") (:file "evaluator")
