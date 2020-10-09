@@ -1,7 +1,7 @@
 (in-package :treep)
 
 (defclass environment ()
-  ((bindings :initform (fset:map) :initarg :bindings :reader environment-bindings)))
+  ((bindings :initform (fset:map) :initarg :bindings :accessor environment-bindings)))
 
 (defun meaning (symbol kind environment)
   (let ((meanings (fset:@ (environment-bindings environment) symbol)))
@@ -130,7 +130,11 @@
 	       (make-instance 'function
 			      :expression (make-instance 'lisp :expression '*environment*))))
     env))
+
 (defvar *environment* (initial-environment))
+
+(defun copy-environment (&optional (environment *environment*))
+  (make-instance 'environment :bindings (environment-bindings environment)))
 
 (defmethod transform (transformer (form binding) environment)
   (transform transformer (binding-body form)
@@ -139,12 +143,13 @@
 				  (definition-kind transformer (binding-definition form))
 				  (transform transformer (binding-definition form) environment))))
 
-(defmethod transform (transformer (form definition) environment)
-  (setf *environment*
-	(augment-environment *environment*
-			     (definition-name form)
-			     (definition-kind transformer (definition-definition form))
-			     (transform transformer (definition-definition form) environment))))
+(defmethod transform (transformer (form install-definition!) environment)
+  (setf (environment-bindings environment)
+	(environment-bindings
+	 (augment-environment environment
+			      (definition-name form)
+			      (definition-kind transformer (definition-definition form))
+			      (transform transformer (definition-definition form) environment)))))
 
 ;;Common forms
 (defclass conditional (form)

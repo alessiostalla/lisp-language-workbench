@@ -132,3 +132,7 @@
 				     (transform transformer (make-instance 'variable-read :name (fset:@ v 1)) environment)))
 			     (lisp-variables form)))
 		       ,(lisp-expression form))))
+
+(defun eval (form &optional (*environment* *environment*))
+  (transform (make-instance 'simple-evaluator) form *environment*))
+

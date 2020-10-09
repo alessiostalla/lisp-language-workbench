@@ -8,6 +8,7 @@
                 ((:file "packages") (:file "symbols")
 		 (:file "forms") (:file "evaluator")
 		 (:file "s-expressions")
+		 (:file "load")
 		 (:file "lisp"))))
   :description ""
   :in-order-to ((test-op (test-op "treep/tests"))))

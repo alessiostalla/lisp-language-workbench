@@ -1,0 +1,4 @@
+(install-definition! #^x (variable-definition 42))
+(install-definition! #^y (variable-definition #^y))
+(install-definition! #^z (variable-definition (quote (variable-read #^z))))
+(install-definition! #^k (variable-definition (variable-read #^x)))
