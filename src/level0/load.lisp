@@ -12,7 +12,7 @@
 	(return-from read))
       (read-form sexp))))
 
-
+;;TODO replace/advise the intern function so that new symbols are not interned until the user explicitly installs the module
 (defun load (stream &key (evaluator (make-instance 'simple-evaluator)) (name "") (reader (make-instance 's-expression-reader)))
   (let ((*symbol-space* (make-instance 'symbol-space
 				       :name (make-instance 'symbol :name name)
@@ -24,6 +24,6 @@
        (transform evaluator form *environment*)))
     (make-module :symbol-space *symbol-space* :environment *environment*)))
 
-(defun load-file (file &key (evaluator (make-instance 'simple-evaluator)))
+(defun load-file (file &key (evaluator (make-instance 'simple-evaluator)) (name "") (reader (make-instance 's-expression-reader)))
   (with-open-file (f file)
-    (load f :evaluator evaluator)))
+    (load f :evaluator evaluator :name name :reader reader)))

@@ -3,11 +3,6 @@
 (defclass environment ()
   ((bindings :initform (fset:map) :initarg :bindings :accessor environment-bindings)))
 
-(defun meaning (symbol kind environment)
-  (let ((meanings (fset:@ (environment-bindings environment) symbol)))
-    (when meanings
-      (fset:@ meanings kind))))
-
 (defclass form ()
   ((parent :accessor form-parent)))
 
@@ -104,7 +99,6 @@
 (defclass variable-definition (definition)
   ((init-form :initarg :init-form :initform nil :reader variable-definition-init-form)
    (mutable? :initarg :mutable :initform nil :reader mutable?)))
-;;TODO should we use function directly? Or inherit from it?
 (defclass function-definition (definition)
   ((init-form :initarg :init-form :initform nil :reader function-definition-init-form)))
 (defclass macro-definition (definition)
@@ -132,6 +126,11 @@
     env))
 
 (defvar *environment* (initial-environment))
+
+(defun meaning (symbol kind &optional (environment *environment*))
+  (let ((meanings (fset:@ (environment-bindings environment) symbol)))
+    (when meanings
+      (fset:@ meanings kind))))
 
 (defun copy-environment (&optional (environment *environment*))
   (make-instance 'environment :bindings (environment-bindings environment)))

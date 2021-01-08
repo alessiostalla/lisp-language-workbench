@@ -9,15 +9,14 @@
 		 (:file "forms") (:file "evaluator")
 		 (:file "s-expressions")
 		 (:file "load") (:file "repl")
-		 (:file "lisp"))))
+		 (:file "lisp") (:file "level1-boot"))))
   :description ""
   :in-order-to ((test-op (test-op "treep/tests"))))
 
 (defsystem "treep/tests"
   :author "Alessio Stalla"
   :license "AGPL"
-  :depends-on ("treep"
-               "rove")
+  :depends-on ("treep" "rove")
   :components ((:module "tests"
                 :components
                 ((:file "main"))))

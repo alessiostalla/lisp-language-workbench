@@ -21,7 +21,11 @@
       ;;TODO handle more specific lambda lists if possible
       (setf environment (augment-environment environment into 'function function))))
   ;;TODO handle variables, classes
+  (let ((class (find-class symbol nil)))
+    (when class
+      (setf environment (augment-environment environment into 'class class))))
   environment)
 
 (setf *environment* (import-lisp-package (find-package :common-lisp)))
-(setf *environment* (import-lisp-package (find-package :treep) :space (intern "treep-impl" *root-symbol*)))
+(setf *environment* (import-lisp-package (find-package :treep) :space (intern "impl" (intern "treep" *root-symbol*))))
+(setf *environment* (import-lisp-package (find-package :closer-mop) :space (intern "mop" (intern "treep" *root-symbol*))))

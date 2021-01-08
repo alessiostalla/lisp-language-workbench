@@ -115,3 +115,6 @@
 				  (declare (ignore char))
 				  (read-symbol stream))))
      ,@body))
+
+(defun symbol? (object)
+  (typep object 'symbol))
