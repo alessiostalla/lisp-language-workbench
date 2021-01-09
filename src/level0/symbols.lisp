@@ -7,7 +7,7 @@
 
 (defclass symbol ()
   ((name :reader symbol-name :initarg :name :type string)
-   (container :reader symbol-container :initarg :container :type symbol :initform nil)
+   (parent :reader symbol-parent :initarg :parent :type symbol :initform nil)
    (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)))
 
 (defvar *root-symbol* (make-instance 'symbol :name ""))
@@ -22,7 +22,7 @@
 			     (setf (symbol-space space) (make-instance 'symbol-space :name space))))
 		 (t (error "Not a symbol space designator: ~S" space))))) ;TODO dedicated condition
     (or (find-symbol the-name space)
-	(let ((symbol (make-instance 'symbol :name the-name :container (symbol-space-name space))))
+	(let ((symbol (make-instance 'symbol :name the-name :parent (symbol-space-name space))))
 	  (setf (symbol-space-contents space)
 		(fset:with (symbol-space-contents space) the-name symbol))
 	  symbol))))
@@ -45,9 +45,9 @@
 		(when symbol (return-from find-symbol symbol)))))))))
 
 (defun print-symbol (symbol &optional (stream *standard-output*))
-  (let ((container (symbol-container symbol)))
-    (when (and container (not (eq container *symbol-space*)))
-      (print-symbol container stream)
+  (let ((parent (symbol-parent symbol)))
+    (when (and parent (not (eq parent *symbol-space*)))
+      (print-symbol parent stream)
       (princ ":" stream)))
   (princ (symbol-name symbol) stream)
   symbol)

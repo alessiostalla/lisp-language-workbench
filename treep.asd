@@ -9,7 +9,7 @@
 		 (:file "forms") (:file "evaluator")
 		 (:file "s-expressions")
 		 (:file "load") (:file "repl")
-		 (:file "lisp") (:file "level1-boot"))))
+		 (:file "lisp") (:file "object-system") (:file "level1-boot"))))
   :description ""
   :in-order-to ((test-op (test-op "treep/tests"))))
 

@@ -2,7 +2,7 @@
   (:use :cl
         :treep
         :rove)
-  (:shadowing-import-from :treep find-symbol intern load quote symbol))
+  (:shadowing-import-from :treep class find-symbol function intern load quote symbol))
 (in-package :treep/tests/main)
 
 ;; NOTE: To run this test file, execute `(asdf:test-system :treep)' in your Lisp.

@@ -20,12 +20,16 @@
 							       :variables (fset:seq (fset:seq 'args rest))))))
       ;;TODO handle more specific lambda lists if possible
       (setf environment (augment-environment environment into 'function function))))
-  ;;TODO handle variables, classes
+  ;;TODO handle variables
   (let ((class (find-class symbol nil)))
     (when class
-      (setf environment (augment-environment environment into 'class class))))
+      (setf environment (augment-environment environment into 'class class)))) ;;TODO handle redefinition through indirection?
   environment)
 
-(setf *environment* (import-lisp-package (find-package :common-lisp)))
-(setf *environment* (import-lisp-package (find-package :treep) :space (intern "impl" (intern "treep" *root-symbol*))))
-(setf *environment* (import-lisp-package (find-package :closer-mop) :space (intern "mop" (intern "treep" *root-symbol*))))
+(defun lisp-symbol (symbol)
+  (let ((parent (symbol-parent symbol)))
+    (if parent
+	(if (null (symbol-parent parent))
+	    (cl:find-symbol (string-upcase (symbol-name symbol)) (find-package (string-upcase (symbol-name symbol))))
+	    (error "Symbol ~A doesn't represent any Lisp symbol" symbol)) ;TODO
+	(cl:intern (string-upcase (symbol-name symbol)) (find-package :keyword)))))
