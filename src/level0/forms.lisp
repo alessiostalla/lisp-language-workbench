@@ -20,7 +20,7 @@
 
 (defmethod transform (transformer (form quote) environment)
   (declare (ignore transformer environment))
-  form)
+  (quoted-form form))
 
 (defclass constant (form)
   ((value :initarg :value :reader constant-value)))

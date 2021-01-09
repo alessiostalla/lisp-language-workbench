@@ -28,8 +28,8 @@
 
 (defun lisp-symbol (symbol)
   (let ((parent (symbol-parent symbol)))
-    (if parent
-	(if (null (symbol-parent parent))
-	    (cl:find-symbol (string-upcase (symbol-name symbol)) (find-package (string-upcase (symbol-name symbol))))
-	    (error "Symbol ~A doesn't represent any Lisp symbol" symbol)) ;TODO
+    (if (and parent (not (eq parent *root-symbol*)))
+	(if (or (null (symbol-parent parent)) (eq (symbol-parent parent) *root-symbol*))
+	    (cl:find-symbol (string-upcase (symbol-name symbol)) (find-package (string-upcase (symbol-name parent))))
+	    (error "The symbol ~A doesn't represent any Lisp symbol" symbol)) ;TODO
 	(cl:intern (string-upcase (symbol-name symbol)) (find-package :keyword)))))
