@@ -25,7 +25,7 @@
 
 (defmethod transform ((transformer simple-evaluator) (form variable-read) environment)
   (let* ((variable (accessed-variable-name form))
-	 (meaning (meaning variable 'variable environment)))
+	 (meaning (meaning variable +kind-variable+ environment)))
     (if meaning
 	(if (typep meaning 'box)
 	    (box-value meaning)
@@ -80,7 +80,7 @@
 			      (let ((env ,environment))
 				,@(cl:loop :for i :from 0 :to (1- (fset:size lambda-list))
 					   :collect `(setf env (augment-environment
-								env ,(function-argument-name (fset:@ lambda-list i)) 'variable
+								env ,(function-argument-name (fset:@ lambda-list i)) +kind-variable+
 								(make-instance 'box :value ,(let ((var (nth i variables)))
 											      (if (eq var rest-var)
 												  `(fset:convert 'fset:seq ,var)
@@ -100,7 +100,7 @@
     (let* ((function-designator (accessed-function-designator form))
 	   (lisp-function
 	    (typecase function-designator	    
-	      (symbol (let ((meaning (meaning function-designator 'function environment)))
+	      (symbol (let ((meaning (meaning function-designator +kind-function+ environment)))
 			(unless meaning
 			  (error (format nil "Unknown function: ~A" (with-output-to-string (out) (print-symbol function-designator out))))) ;TODO proper condition class
 			(to-lisp-function meaning)))

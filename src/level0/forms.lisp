@@ -1,5 +1,9 @@
 (in-package :treep)
 
+(defconstant +symbol-treep+ (intern "treep" *root-symbol*))
+(defconstant +kind-function+ (intern "function" +symbol-treep+))
+(defconstant +kind-variable+ (intern "variable" +symbol-treep+))
+
 (defclass environment ()
   ((bindings :initform (fset:map) :initarg :bindings :accessor environment-bindings)))
 
@@ -107,9 +111,9 @@
 
 (defgeneric definition-kind (transformer definition))
 (defmethod definition-kind (transformer (definition variable-definition))
-  'variable)
+  +kind-variable+)
 (defmethod definition-kind (transformer (definition function-definition))
-  'function)
+  +symbol-function+)
 
 (defclass lisp (form)
   ((expression :initarg :expression :initform nil :reader lisp-expression)
@@ -120,7 +124,7 @@
     (setf env (augment-environment
 	       env
 	       (intern "the-global-environment" *root-symbol*)
-	       'function
+	       +symbol-function+
 	       (make-instance 'function
 			      :expression (make-instance 'lisp :expression '*environment*))))
     env))
