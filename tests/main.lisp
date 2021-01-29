@@ -24,7 +24,7 @@
   
   (testing "(binding ((var a)) a) should eval to nil"
     (let* ((var (intern "a" *root-symbol*))
-	   (form (make-instance 'binding :name var :definition (make-instance 'variable-definition)
+	   (form (make-instance 'binding :definition (make-instance 'variable-definition :name var)
 				:body (make-instance 'variable-read :name var)))
 	   (result (transform (make-instance 'simple-evaluator) form *environment*)))
       (ok (null result))))
@@ -32,7 +32,7 @@
   (testing "(binding ((var a 1)) a) should eval to 1"
     (let* ((var (intern "a" *root-symbol*))
 	   (value 1)
-	   (form (make-instance 'binding :name var :definition (make-instance 'variable-definition :init-form value)
+	   (form (make-instance 'binding :definition (make-instance 'variable-definition :name var :init-form value)
 				:body (make-instance 'variable-read :name var)))
 	   (result (transform (make-instance 'simple-evaluator) form *environment*)))
       (ok (= value result))))
@@ -43,16 +43,16 @@
       (ok (= value result)))))
 
 (deftest evaluator+reader
-  (testing "Evaluating the form read from '(binding #^a (variable-definition 1) (variable-read #^a)) should eval to 1"
+  (testing "Evaluating the form read from '(binding (variable-definition #^a 1) (variable-read #^a)) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding #^a (variable-definition 1) (variable-read #^a))")))
+	     (form (read-form (read-from-string "(binding (variable-definition #^a 1) (variable-read #^a))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result)))))
-  (testing "Evaluating the form read from '(binding #^f (function-definition (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
+  (testing "Evaluating the form read from '(binding (function-definition #^f (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1)))")))
+	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1)))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result))))))
 
@@ -69,19 +69,19 @@
   (testing "An optional function argument with no default, which is not provided, evaluates to nil"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((optional-function-argument #^x)) (variable-read #^x))) (function-call #^f))")))
+	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((optional-function-argument #^x)) (variable-read #^x))) (function-call #^f))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (null result)))))
   (testing "An optional function argument which is not provided evaluates to its default value"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((optional-function-argument #^x (function-call #^the-global-environment))) (variable-read #^x))) (function-call #^f))")))
+	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((optional-function-argument #^x (function-call #^the-global-environment))) (variable-read #^x))) (function-call #^f))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (eq *environment* result)))))
   (testing "A rest function argument accumulates all the remaining arguments into a list"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding #^f (function-definition (function ((rest-function-argument #^x)) (variable-read #^x))) (function-call #^f (1 2 3)))")))
+	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((rest-function-argument #^x)) (variable-read #^x))) (function-call #^f (1 2 3)))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (typep result 'fset:seq))
 	(ok (= (fset:size result) 3))

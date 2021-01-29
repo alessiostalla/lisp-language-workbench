@@ -77,16 +77,14 @@
 
 ;;Environment and definitions
 (defclass definition (form)
-  ((documentation :initform nil :initarg :documentation :accessor definition-documentation)))
+  ((name :initarg :name :reader definition-name)))
 
 (defclass binding (form)
-  ((name :initarg :name :reader binding-name)
-   (definition :initarg :definition :reader binding-definition :type definition)
+  ((definition :initarg :definition :reader binding-definition :type definition)
    (body :initarg :body :reader binding-body)))
 
-(defclass install-definition! (form)
-  ((name :initarg :name :reader definition-name)
-   (definition :initarg :definition :reader definition-definition :type definition)))
+(defclass define! (form)
+  ((definition :initarg :definition :reader define!-definition :type definition)))
 
 (defun augment-environment (environment name kind meaning)
   (flet ((compute-meanings ()
@@ -113,7 +111,7 @@
 (defmethod definition-kind (transformer (definition variable-definition))
   +kind-variable+)
 (defmethod definition-kind (transformer (definition function-definition))
-  +symbol-function+)
+  +kind-function+)
 
 (defclass lisp (form)
   ((expression :initarg :expression :initform nil :reader lisp-expression)
@@ -124,7 +122,7 @@
     (setf env (augment-environment
 	       env
 	       (intern "the-global-environment" *root-symbol*)
-	       +symbol-function+
+	       +kind-function+
 	       (make-instance 'function
 			      :expression (make-instance 'lisp :expression '*environment*))))
     env))
@@ -139,20 +137,22 @@
 (defun copy-environment (&optional (environment *environment*))
   (make-instance 'environment :bindings (environment-bindings environment)))
 
-(defmethod transform (transformer (form binding) environment)
-  (transform transformer (binding-body form)
-	     (augment-environment environment
-				  (binding-name form)
-				  (definition-kind transformer (binding-definition form))
-				  (transform transformer (binding-definition form) environment))))
+(defgeneric compute-new-environment-for-definition (transformer definition environment))
 
-(defmethod transform (transformer (form install-definition!) environment)
-  (setf (environment-bindings environment)
-	(environment-bindings
-	 (augment-environment environment
-			      (definition-name form)
-			      (definition-kind transformer (definition-definition form))
-			      (transform transformer (definition-definition form) environment)))))
+(defmethod compute-new-environment-for-definition (transformer (definition definition) environment)
+  (augment-environment environment
+		       (definition-name definition)
+		       (definition-kind transformer definition)
+		       (transform transformer definition environment)))
+
+(defmethod transform (transformer (form binding) environment)
+  (let ((def (binding-definition form)))
+    (transform transformer (binding-body form) (compute-new-environment-for-definition transformer def environment))))
+
+(defmethod transform (transformer (form define!) environment)
+  (let ((def (define!-definition form)))
+    (setf (environment-bindings environment)
+	  (environment-bindings (compute-new-environment-for-definition transformer def environment)))))
 
 ;;Common forms
 (defclass conditional (form)

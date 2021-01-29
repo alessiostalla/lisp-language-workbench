@@ -1,6 +1,6 @@
 (defpackage treep
   (:use :cl)
-  (:shadow cl:class cl:eval cl:find-symbol cl:function cl:intern cl:load cl:loop cl:quote cl:read cl:symbol cl:symbol-name cl:variable)
+  (:shadow cl:class cl:eval cl:find-symbol cl:function cl:generic-function cl:intern cl:load cl:loop cl:quote cl:read cl:symbol cl:symbol-name cl:variable)
   (:export #:binding #:class #:conditional
 	   #:environment #:*environment*
 	   #:find-symbol #:form-parent #:function #:intern
