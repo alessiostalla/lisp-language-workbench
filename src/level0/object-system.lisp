@@ -11,9 +11,8 @@
 (defclass generic-function-definition (definition)
   ((lambda-list :initarg :lambda-list :initform (fset:seq) :reader function-lambda-list)))
 
-(defclass generic-function (form)
-  ((lambda-list :initarg :lambda-list :initform (fset:seq) :reader function-lambda-list)
-   (methods :initform (fset:seq) :accessor generic-function-methods)))
+(defclass generic-function (function)
+  ((methods :initform (fset:seq) :accessor generic-function-methods)))
 
 (defclass method-definition (definition)
   ((lambda-list :initarg :lambda-list :initform (fset:seq) :reader method-lambda-list)
@@ -37,14 +36,17 @@
 (defmethod compute-new-environment-for-definition (transformer (definition method-definition) environment)
   (let ((gf (meaning (definition-name definition) +kind-function+ environment)))
     (if gf
-	(unless (typep gf 'generic-function) ;;TODO check lambda lists match!
+	(unless (typep gf 'generic-function) ;;TODO check that lambda lists match!
 	  (error "Not a generic function: ~A" gf)) ;;TODO proper conditions
-	(progn
-	  (setf gf (make-instance 'generic-function :lambda-list (reconstruct-generic-lambda-list definition)))
-	  (setf environment (augment-environment environment (definition-name definition) +kind-function+ gf))))
-    ;;TODO replace when specializers match!
-    (setf (generic-function-methods gf) (fset:with-last (generic-function-methods gf) (transform transformer definition environment)))
-    environment))
+	(setf gf (make-instance 'generic-function :lambda-list (fset:image #'as-generic-argument (method-lambda-list definition)))))
+    (augment-environment environment (definition-name definition) +kind-function+
+			 (make-instance 'generic-function
+					:lambda-list (function-lambda-list gf)
+					;;TODO replace when specializers match!
+					:methods (fset:with-last (generic-function-methods gf) (transform transformer definition environment))))))
 
-(defun reconstruct-generic-lambda-list (method-definition)
-  :todo)
+(defgeneric as-generic-argument (argument))
+(defmethod as-generic-argument ((argument function-argument))
+  argument)
+(defmethod as-generic-argument ((argument specialized-argument))
+  (make-instance 'function-argument :name (function-argument-name argument)))
