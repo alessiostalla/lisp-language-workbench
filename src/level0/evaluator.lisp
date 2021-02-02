@@ -10,8 +10,7 @@
 (defclass box ()
   ((value :initarg :value :accessor box-value)))
 
-(defclass interpreted-function (function)
-  ((lisp-function :initarg :lisp-function :reader lisp-function)))
+(defclass interpreted-function (function closer-mop:funcallable-standard-object) () (:metaclass closer-mop:funcallable-standard-class))
 
 (defmethod transform ((transformer simple-evaluator) (form variable-definition) environment)
   (let ((value (transform transformer (variable-definition-init-form form) environment)))
@@ -34,16 +33,15 @@
 
 (defun check-function-lambda-list (ll)
   (let (found-optional found-rest)
-    (fset:image (lambda (arg)
-		  (when found-rest
-		    (error "No further arguments allowed after the rest argument: ~A" arg)) ;TODO specific condition class
-		  (etypecase arg
-		    (optional-function-argument (setf found-optional t))
-		    (rest-function-argument (setf found-rest t))
-		    (function-argument
-		     (when found-optional
-		       (error "No further regular arguments allowed after first optional argument: ~A" arg))))) ;TODO specific condition class
-		ll)
+    (fset:do-seq (arg ll)
+      (when found-rest
+	(error "No further arguments allowed after the rest argument: ~A" arg)) ;TODO specific condition class
+      (etypecase arg
+	(optional-function-argument (setf found-optional t))
+	(rest-function-argument (setf found-rest t))
+	(function-argument
+	 (when found-optional
+	   (error "No further regular arguments allowed after first optional argument: ~A" arg))))) ;TODO specific condition class
     ll))
 
 (defun to-lisp-lambda-list (lambda-list transformer environment)
@@ -69,33 +67,39 @@
      (nreverse symbols)
      rest-var)))
 
+(defmethod transform ((transformer simple-evaluator) (form interpreted-function) environment)
+  (declare (ignorable transformer environment))
+  form)
+
+(defun make-interpreted-lambda-expression (lambda-list body transformer environment)
+  (multiple-value-bind (lisp-args variables rest-var)
+      (to-lisp-lambda-list lambda-list transformer environment)
+    `(lambda ,lisp-args
+       ;;TODO declare args ignorable?
+       (transform ,transformer ,body
+		  (let ((env ,environment))
+		    ,@(cl:loop :for i :from 0 :to (1- (fset:size lambda-list))
+			       :collect `(setf env (augment-environment
+						    env ,(function-argument-name (fset:@ lambda-list i)) +kind-variable+
+						    (make-instance 'box :value ,(let ((var (nth i variables)))
+										  (if (eq var rest-var)
+										      `(fset:convert 'fset:seq ,var)
+										      var)))))) ;TODO should they be constant?
+		    env)))))
+
 (defmethod transform ((transformer simple-evaluator) (form function) environment)
-  (let ((lambda-list (check-function-lambda-list (function-lambda-list form)))
-	(body (function-expression form)))
-    (multiple-value-bind (lisp-args variables rest-var)
-	(to-lisp-lambda-list lambda-list transformer environment)
-      (let ((fn `(lambda ,lisp-args
-		   ;;TODO declare args ignorable?
-		   (transform ,transformer ,body
-			      (let ((env ,environment))
-				,@(cl:loop :for i :from 0 :to (1- (fset:size lambda-list))
-					   :collect `(setf env (augment-environment
-								env ,(function-argument-name (fset:@ lambda-list i)) +kind-variable+
-								(make-instance 'box :value ,(let ((var (nth i variables)))
-											      (if (eq var rest-var)
-												  `(fset:convert 'fset:seq ,var)
-												  var)))))) ;TODO should they be constant?
-				env)))))
-	(make-instance 'interpreted-function
-		       :lambda-list (function-lambda-list form)
-		       :lisp-function (compile nil fn))))))
+  (let* ((lambda-list (check-function-lambda-list (function-lambda-list form)))
+	 (body (function-expression form))
+	 (fn (make-interpreted-lambda-expression lambda-list body transformer environment))
+	 (interpreted-function (make-instance 'interpreted-function :lambda-list lambda-list)))
+    (closer-mop:set-funcallable-instance-function interpreted-function (compile nil fn))
+    interpreted-function))
 
 (defmethod transform ((transformer simple-evaluator) (form function-call) environment)
   (flet ((to-lisp-function (designator)
 	   (typecase designator
-	     (interpreted-function (lisp-function designator))
-	     (function (lisp-function (transform transformer designator environment)))
-	     (cl:function designator)
+	     ((or interpreted-function cl:function closer-mop:funcallable-standard-object) designator)
+	     (function (transform transformer designator environment))
 	     (t (error "Not a function designator: ~S" designator))))) ;TODO proper condition class
     (let* ((function-designator (accessed-function-designator form))
 	   (lisp-function

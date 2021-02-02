@@ -10,12 +10,18 @@
 (defclass form ()
   ((parent :accessor form-parent)))
 
+(defgeneric init-subform (parent name child))
+(defmethod init-subform ((parent form) (name (eql 'parent)) (child form))
+  nil)
+(defmethod init-subform ((parent form) name (child form))
+  (setf (form-parent child) parent)) ;;TODO check it doesn't already have a parent
+
 (defmethod initialize-instance :after ((instance form) &key &allow-other-keys)
   (cl:loop
      :for slot :in (closer-mop:class-slots (class-of instance))
      :do (let ((name (closer-mop:slot-definition-name slot)))
-	   (if (and (not (eq name 'parent)) (slot-boundp instance name) (typep (slot-value instance name) 'form))
-	       (setf (form-parent (slot-value instance name)) instance)))))
+	   (if (and (slot-boundp instance name) (typep (slot-value instance name) 'form))
+	       (init-subform instance name (slot-value instance name)))))) ;;TODO lists of children
 
 (defgeneric transform (transformer form environment))
 
