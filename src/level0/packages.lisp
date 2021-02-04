@@ -2,7 +2,7 @@
   (:use :cl)
   (:shadow cl:class cl:eval cl:find-symbol cl:function cl:generic-function cl:intern cl:load cl:loop cl:quote cl:read cl:symbol cl:symbol-name cl:variable)
   (:export #:binding
-	   #:class #:conditional
+	   #:class #:class-definition #:class-reference #:conditional
 	   #:environment #:*environment*
 	   #:find-symbol #:form #:form-parent #:function #:function-argument #:function-call
 	   #:intern
@@ -10,8 +10,7 @@
 	   #:method-definition
 	   #:quote 
 	   #:read-form #:*root-symbol*
-	   #:symbol
-	   #:simple-evaluator #:specialized-function-argument
+	   #:simple-evaluator #:slot-definition #:specialized-function-argument #:symbol #:+symbol-treep+
 	   #:transform
 	   #:variable-access #:variable-definition
 	   #:variable-read #:variable-write

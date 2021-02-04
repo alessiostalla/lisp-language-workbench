@@ -3,8 +3,11 @@
 (defconstant +kind-class+ (intern "class" +symbol-treep+))
 
 (defclass class-definition (definition)
-  ((superclasses :initform (fset:seq (find-class 'standard-object)) :initarg :superclasses :accessor class-definition-superclasses)
+  ((superclasses :initform (fset:seq) :initarg :superclasses :accessor class-definition-superclasses)
    (slots :initform (fset:seq) :initarg :slots :accessor class-definition-slots)))
+
+(defclass class-reference (form)
+  ((class-name :initarg :class-name :reader referenced-class)))
 
 (defclass slot-definition (definition) ())
 
@@ -25,10 +28,10 @@
 (defmethod definition-kind (transformer (definition class-definition))
   +kind-class+)
 (defmethod transform (transformer (form class-definition) environment)
-  (make-instance 'standard-class
-		 :direct-superclasses (fset:convert 'list (class-definition-superclasses form))
+  (make-instance 'standard-class ;;TODO metaclass
+		 :direct-superclasses (or (fset:convert 'list (class-definition-superclasses form)) (list (find-class 'standard-object)))
 		 :direct-slots (fset:convert 'list (fset:image (lambda (def)
-								 (list :name (lisp-symbol (definition-name def)))) (class-definition-slots form))))) ;;TODO
+								 (list :name (lisp-symbol (definition-name def)))) (class-definition-slots form))))) ;;TODO accessors, etc.
 
 (defmethod definition-kind (transformer (definition generic-function-definition))
   +kind-function+)
@@ -80,6 +83,10 @@
       (t (error "Not a valid specializer: ~A" specializer))))) ;;TODO proper condition
 
 ;;Evaluation
+(defmethod transform ((transformer simple-evaluator) (form class-reference) environment)
+  (declare (ignorable transformer))
+  (meaning (referenced-class form) +kind-class+ environment))
+
 (defclass interpreted-generic-function (interpreted-function generic-function) () (:metaclass closer-mop:funcallable-standard-class))
 
 (defmethod transform ((transformer simple-evaluator) (form generic-function-definition) environment)
