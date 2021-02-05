@@ -7,7 +7,7 @@
 
 ;; NOTE: To run this test file, execute `(asdf:test-system :treep)' in your Lisp.
 
-(deftest classes
+(deftest classes-and-slots
   (testing "Empty class definition"
     (let* ((name (intern "c" *root-symbol*))
 	   (form (make-instance 'binding
@@ -25,7 +25,24 @@
 							   :slots (fset:seq (make-instance 'slot-definition :name name)))
 				:body (make-instance 'class-reference :class-name name)))
 	   (result (make-instance (transform (make-instance 'simple-evaluator) form *environment*))))
-      (ok (not (slot-boundp result (treep::lisp-symbol name)))))))
+      (ok (not (slot-boundp result (treep::lisp-symbol name))))
+      (ok (equal (list (treep::lisp-symbol name)) (mapcar #'closer-mop:slot-definition-name (closer-mop:class-slots (class-of result)))))))
+    (testing "Reading and writing slots"
+      (let* ((name (intern "c" *root-symbol*))
+	     (form (make-instance 'binding
+				  :definition (make-instance 'class-definition
+							     :name name
+							     :slots (fset:seq (make-instance 'slot-definition :name name)))
+				  :body (make-instance 'binding
+						       :definition (make-instance 'variable-definition
+										  :name name
+										  :init-form (make-instance 'new-instance
+													    :class (make-instance 'class-reference :class-name name)))
+						       :body (fset:seq
+							      (make-instance 'slot-write :object (make-instance 'variable-read :name name) :slot-name name :new-value 42)
+							      (make-instance 'slot-read :object (make-instance 'variable-read :name name) :slot-name name)))))
+	   (result (transform (make-instance 'simple-evaluator) form *environment*)))
+      (ok (= result 42)))))
 
 (deftest methods
   (testing "Simple method on symbol, implicit gf declaration"

@@ -7,6 +7,9 @@
       (call-next-method)
       form)) ;Lisp objects are self-evaluating
 
+(defmethod transform ((transformer simple-evaluator) (form fset:seq) environment)
+  (fset:last (fset:image (lambda (f) (transform transformer f environment)) form)))
+
 (defclass box ()
   ((value :initarg :value :accessor box-value)))
 
@@ -26,9 +29,7 @@
   (let* ((variable (accessed-variable-name form))
 	 (meaning (meaning variable +kind-variable+ environment)))
     (if meaning
-	(if (typep meaning 'box)
-	    (box-value meaning)
-	    (error "BUG! Not a variable: ~S" meaning)) ;TODO proper condition class
+	(if (typep meaning 'box) (box-value meaning) meaning)
 	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
 
 (defun check-function-lambda-list (ll)

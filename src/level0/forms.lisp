@@ -107,6 +107,7 @@
 (defclass variable-definition (definition)
   ((init-form :initarg :init-form :initform nil :reader variable-definition-init-form)
    (mutable? :initarg :mutable :initform nil :reader mutable?)))
+
 (defclass function-definition (definition)
   ((init-form :initarg :init-form :initform nil :reader function-definition-init-form)))
 (defclass macro-definition (definition)

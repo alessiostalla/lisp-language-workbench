@@ -4,7 +4,8 @@
 
 (defclass class-definition (definition)
   ((superclasses :initform (fset:seq) :initarg :superclasses :accessor class-definition-superclasses)
-   (slots :initform (fset:seq) :initarg :slots :accessor class-definition-slots)))
+   (slots :initform (fset:seq) :initarg :slots :accessor class-definition-slots)
+   (metaclass :initform 'standard-class :initarg :metaclass :accessor class-definition-metaclass)))
 
 (defclass class-reference (form)
   ((class-name :initarg :class-name :reader referenced-class)))
@@ -25,17 +26,34 @@
 (defclass specialized-function-argument (function-argument)
   ((specializer :initarg :specializer :reader argument-specializer)))
 
+(defclass slot-access (form)
+  ((object :initarg :object :reader accessed-object)
+   (slot-name :initarg :slot-name :reader accessed-slot-name)))
+
+(defclass slot-read (slot-access) ())
+
+(defclass slot-write (slot-access)
+  ((new-value :initarg :new-value :reader slot-write-new-value)))
+
+(defclass new-instance (form)
+  ((class :initarg :class :reader new-instance-class)
+   (slot-values :initarg :slot-values :initform (fset:seq) :reader new-instance-slots)))
+
+(defclass slot-value (form)
+  ((name :initarg :name :reader slot-name)
+   (value :initarg :value :reader slot-initial-value)))
+
 (defmethod definition-kind (transformer (definition class-definition))
   +kind-class+)
 (defmethod transform (transformer (form class-definition) environment)
   (make-instance 'standard-class ;;TODO metaclass
 		 :direct-superclasses (or (fset:convert 'list (class-definition-superclasses form)) (list (find-class 'standard-object)))
 		 :direct-slots (fset:convert 'list (fset:image (lambda (def)
-								 (list :name (lisp-symbol (definition-name def)))) (class-definition-slots form))))) ;;TODO accessors, etc.
+								 (list :name (lisp-symbol (definition-name def)) :initargs (list (lisp-symbol (definition-name def)))))
+							       (class-definition-slots form))))) ;;TODO accessors, etc.
 
 (defmethod definition-kind (transformer (definition generic-function-definition))
   +kind-function+)
-;;TODO transform gf
 
 (defmethod compute-new-environment-for-definition (transformer (definition method-definition) environment)
   (let ((gf (meaning (definition-name definition) +kind-function+ environment)))
@@ -97,7 +115,6 @@
 					:methods (generic-function-methods form))
 	     environment))
 
-
 (defmethod transform ((transformer simple-evaluator) (form generic-function) environment)
   (let* ((lambda-list (check-function-lambda-list (function-lambda-list form)))
 	 (lisp-lambda-list (to-lisp-lambda-list lambda-list transformer environment))
@@ -116,3 +133,22 @@
 									    lambda-list))))))
     (closer-mop:set-funcallable-instance-function interpreted-function gf)
     interpreted-function))
+
+(defmethod transform ((transformer simple-evaluator) (form new-instance) environment)
+  (let ((class (transform transformer (new-instance-class form) environment)))
+    (apply #'make-instance
+	   (typecase class
+	     (cl:class class)
+	     (symbol (meaning class +kind-class+ environment))
+	     (t (error "Not a class designator: ~A" class))) ;;TODO proper conditions!
+	   (fset:convert 'list (fset:reduce #'fset:concat
+					    (fset:image (lambda (slot) (fset:seq (slot-name slot) (slot-initial-value slot)))
+							(new-instance-slots form))
+					    :initial-value (fset:seq))))))
+
+(defmethod transform ((transformer simple-evaluator) (form slot-read) environment)
+  (slot-value (transform transformer (accessed-object form) environment) (lisp-symbol (transform transformer (accessed-slot-name form) environment))))
+
+(defmethod transform ((transformer simple-evaluator) (form slot-write) environment)
+  (setf (slot-value (transform transformer (accessed-object form) environment) (lisp-symbol (transform transformer (accessed-slot-name form) environment)))
+	(transform transformer (slot-write-new-value form) environment)))

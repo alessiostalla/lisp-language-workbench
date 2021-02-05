@@ -8,9 +8,10 @@
 	   #:intern
 	   #:load #:load-file
 	   #:method-definition
+	   #:new-instance
 	   #:quote 
 	   #:read-form #:*root-symbol*
-	   #:simple-evaluator #:slot-definition #:specialized-function-argument #:symbol #:+symbol-treep+
+	   #:simple-evaluator #:slot-definition #:slot-read #:slot-write #:specialized-function-argument #:symbol #:+symbol-treep+
 	   #:transform
 	   #:variable-access #:variable-definition
 	   #:variable-read #:variable-write
