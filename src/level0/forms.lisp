@@ -89,8 +89,8 @@
   ((definition :initarg :definition :reader binding-definition :type definition)
    (body :initarg :body :reader binding-body)))
 
-(defclass define! (form)
-  ((definition :initarg :definition :reader define!-definition :type definition)))
+(defclass define (form)
+  ((definition :initarg :definition :reader define-definition :type definition)))
 
 (defun augment-environment (environment name kind meaning)
   (flet ((compute-meanings ()
@@ -156,8 +156,8 @@
   (let ((def (binding-definition form)))
     (transform transformer (binding-body form) (compute-new-environment-for-definition transformer def environment))))
 
-(defmethod transform (transformer (form define!) environment)
-  (let ((def (define!-definition form)))
+(defmethod transform (transformer (form define) environment)
+  (let ((def (define-definition form)))
     (setf (environment-bindings environment)
 	  (environment-bindings (compute-new-environment-for-definition transformer def environment)))))
 

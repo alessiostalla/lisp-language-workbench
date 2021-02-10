@@ -1,0 +1,3 @@
+(define (function-definition #^:treep:read
+          (function ((function-argument #^stream))
+           ((function-call #^:common-lisp:read-char ((variable-read #^stream)))))))

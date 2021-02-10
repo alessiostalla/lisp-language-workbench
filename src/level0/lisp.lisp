@@ -19,11 +19,11 @@
 							       :expression `(apply ',symbol (fset:convert 'list args))
 							       :variables (fset:seq (fset:seq 'args rest))))))
       ;;TODO handle more specific lambda lists if possible
-      (setf environment (augment-environment environment into 'function function))))
+      (setf environment (augment-environment environment into +kind-function+ function))))
   ;;TODO handle variables
   (let ((class (find-class symbol nil)))
     (when class
-      (setf environment (augment-environment environment into 'class class)))) ;;TODO handle redefinition through indirection?
+      (setf environment (augment-environment environment into +kind-class+ class)))) ;;TODO handle redefinition through indirection?
   environment)
 
 (defun lisp-symbol (symbol)
