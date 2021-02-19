@@ -7,10 +7,10 @@
 	   #:find-symbol #:form #:form-parent #:function #:function-argument #:function-call
 	   #:intern
 	   #:load #:load-file
-	   #:method-definition
+	   #:meaning #:method-definition
 	   #:new-instance
 	   #:quote 
-	   #:read-form #:*root-symbol*
+	   #:read-form #:read-symbol #:read-symbol-from-string #:*root-symbol*
 	   #:simple-evaluator #:slot-definition #:slot-read #:slot-write #:specialized-function-argument #:symbol #:+symbol-treep+
 	   #:transform
 	   #:variable-access #:variable-definition

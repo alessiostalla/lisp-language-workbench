@@ -1,6 +1,6 @@
 (in-package :treep)
 
-(defconstant +symbol-treep+ (intern "treep" *root-symbol*))
+(defconstant +kind-class+    (intern "class"    +symbol-treep+))
 (defconstant +kind-function+ (intern "function" +symbol-treep+))
 (defconstant +kind-variable+ (intern "variable" +symbol-treep+))
 
@@ -41,7 +41,7 @@
 (defclass variable-read (variable-access) ())
 
 (defclass variable-write (variable-access)
-  ((form :initarg :form)))
+  ((form :initarg :form :reader variable-write-form)))
 
 (defclass function-argument (form)
   ((name :initarg :name :reader function-argument-name :type symbol)))

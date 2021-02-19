@@ -1,3 +1,22 @@
-(define (function-definition #^:treep:read
+;;See https://stackoverflow.com/questions/27743440/how-do-i-read-whitespace-delimited-words-from-a-stream
+(define (function-definition #^whitespace?
+	  (function ((function-argument #^ch))
+	    (conditional (function-call #^common-lisp:char= ((variable-read #^ch) #\Space))
+	      ()
+       	      (conditional (function-call #^common-lisp:graphic-char-p ((variable-read #^ch)))
+	        ()
+		(variable-read #^ch))))))
+
+(define (function-definition #^read
           (function ((function-argument #^stream))
-           ((function-call #^:common-lisp:read-char ((variable-read #^stream)))))))
+	    (binding (variable-definition #^form)
+              (loop ()
+                (binding (variable-definition #^ch (function-call #^:common-lisp:peek-char ((variable-read #^stream) #^common-lisp:t)))
+ 		  (conditional (function-call #^:common-lisp:char= ((variable-read #^ch) #\)))
+		    (loop-break () (variable-read #^form))
+      		    ;;TODO if form then read subforms
+		    (conditional (function-call #^:common-lisp:char= ((variable-read #^ch) #\())
+                      (binding (variable-definition #^class (class-reference (function-call #^read-symbol ((variable-read #^stream)))))
+		        (binding (variable-definition #^slots (function-call #^mop:class-slots (variable-read #^class)))
+		          ((variable-write #^form (new-instance (variable-read #^class))))))
+		      ())))))))) ;TODO 

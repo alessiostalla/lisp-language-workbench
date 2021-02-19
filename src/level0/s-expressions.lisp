@@ -10,12 +10,12 @@
 				       (closer-mop:class-slots class)))))
 
 (defun read-form (sexp)
-  (if (listp sexp)
+  (if (consp sexp)
       (cond
 	((eq (car sexp) 'list)
 	 (fset:convert 'fset:seq (mapcar #'read-form (cdr sexp))))
 	((symbolp (car sexp)) (read-complex-form sexp (find-class (car sexp))))
-	((symbol? (car sexp)) (read-complex-form sexp (meaning (car sexp) 'class)))
+	((symbol? (car sexp)) (read-complex-form sexp (meaning (car sexp) +kind-class+)))
 	(t (fset:convert 'fset:seq (mapcar #'read-form sexp))))
       sexp))
 

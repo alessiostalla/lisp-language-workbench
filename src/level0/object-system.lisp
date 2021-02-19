@@ -1,7 +1,5 @@
 (in-package :treep)
 
-(defconstant +kind-class+ (intern "class" +symbol-treep+))
-
 (defclass class-definition (definition)
   ((superclasses :initform (fset:seq) :initarg :superclasses :accessor class-definition-superclasses)
    (slots :initform (fset:seq) :initarg :slots :accessor class-definition-slots)
@@ -102,8 +100,13 @@
 
 ;;Evaluation
 (defmethod transform ((transformer simple-evaluator) (form class-reference) environment)
-  (declare (ignorable transformer))
-  (meaning (referenced-class form) +kind-class+ environment))
+  (let ((class (transform transformer (referenced-class form) environment)))
+    (typecase class
+      (cl:class class)
+      (symbol
+       (or (meaning class +kind-class+ environment)
+	   (error "There is no class named ~A" class))) ;;TODO proper condition
+      (t (error "Not a class designator: ~A" class))))) ;;TODO proper condition
 
 (defclass interpreted-generic-function (interpreted-function generic-function) () (:metaclass closer-mop:funcallable-standard-class))
 
@@ -139,7 +142,7 @@
     (apply #'make-instance
 	   (typecase class
 	     (cl:class class)
-	     (symbol (meaning class +kind-class+ environment))
+	     (symbol (or (meaning class +kind-class+ environment) (error "Unknown class: ~A" class))) ;;TODO proper conditions!
 	     (t (error "Not a class designator: ~A" class))) ;;TODO proper conditions!
 	   (fset:convert 'list (fset:reduce #'fset:concat
 					    (fset:image (lambda (slot) (fset:seq (slot-name slot) (slot-initial-value slot)))

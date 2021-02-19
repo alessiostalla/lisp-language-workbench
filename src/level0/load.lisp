@@ -12,6 +12,7 @@
 
 (defun load (stream &key (evaluator (make-instance 'simple-evaluator)) (reader (make-instance 's-expression-reader)))
   (let ((*package* (find-package :treep))
+	(*symbol-space* *symbol-space*)
 	(environment (copy-environment))) ;So we don't side-effect it
     (cl:loop
      (let ((form (read reader stream)))

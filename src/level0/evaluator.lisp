@@ -32,6 +32,15 @@
 	(if (typep meaning 'box) (box-value meaning) meaning)
 	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
 
+(defmethod transform ((transformer simple-evaluator) (form variable-write) environment)
+  (let* ((variable (accessed-variable-name form))
+	 (meaning (meaning variable +kind-variable+ environment)))
+    (if meaning
+	(if (typep meaning 'box)
+	    (setf (box-value meaning) (transform transformer (variable-write-form form) environment))
+	    (error (format nil "Not a variable: ~A" (with-output-to-string (out) (print-symbol variable out))))) ;TODO proper condition class
+	(error (format nil "Unknown variable: ~A" (with-output-to-string (out) (print-symbol variable out))))))) ;TODO proper condition class
+
 (defun check-function-lambda-list (ll)
   (let (found-optional found-rest)
     (fset:do-seq (arg ll)
@@ -96,25 +105,26 @@
     (closer-mop:set-funcallable-instance-function interpreted-function (compile nil fn))
     interpreted-function))
 
-(defmethod transform ((transformer simple-evaluator) (form function-call) environment)
+(defun resolve-function (transformer function-designator environment)
   (flet ((to-lisp-function (designator)
 	   (typecase designator
 	     ((or interpreted-function cl:function closer-mop:funcallable-standard-object) designator)
 	     (function (transform transformer designator environment))
 	     (t (error "Not a function designator: ~S" designator))))) ;TODO proper condition class
-    (let* ((function-designator (accessed-function-designator form))
-	   (lisp-function
-	    (typecase function-designator	    
-	      (symbol (let ((meaning (meaning function-designator +kind-function+ environment)))
-			(unless meaning
-			  (error (format nil "Unknown function: ~A" (with-output-to-string (out) (print-symbol function-designator out))))) ;TODO proper condition class
-			(to-lisp-function meaning)))
-	      (t (to-lisp-function (transform transformer function-designator environment))))))
-      (apply lisp-function (fset:convert
-			    'list
-			    (fset:image
-			     (lambda (a) (transform transformer a environment))
-			     (function-arguments form)))))))
+    (typecase function-designator	    
+      (symbol (let ((meaning (meaning function-designator +kind-function+ environment)))
+		(unless meaning
+		  (error (format nil "Unknown function: ~A" (with-output-to-string (out) (print-symbol function-designator out))))) ;TODO proper condition class
+		(to-lisp-function meaning)))
+      (t (to-lisp-function (transform transformer function-designator environment))))))
+
+(defmethod transform ((transformer simple-evaluator) (form function-access) environment)
+  (resolve-function transformer (accessed-function-designator form) environment))
+
+(defmethod transform ((transformer simple-evaluator) (form function-call) environment)
+  (let ((lisp-function (resolve-function transformer (accessed-function-designator form) environment)))
+    (apply lisp-function
+	   (fset:convert 'list (fset:image (lambda (a) (transform transformer a environment)) (function-arguments form))))))
 
 (defmethod transform ((transformer simple-evaluator) (form conditional) environment)
   (if (transform transformer (conditional-if   form) environment)

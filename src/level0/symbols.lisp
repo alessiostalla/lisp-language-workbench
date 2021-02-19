@@ -10,8 +10,9 @@
    (parent :reader symbol-parent :initarg :parent :type symbol :initform nil)
    (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)))
 
-(defvar *root-symbol* (make-instance 'symbol :name ""))
-(defvar *symbol-space* *root-symbol*)
+(defvar *root-symbol* (make-instance 'symbol :name "")) ;;TODO should be a constant!
+(defconstant +symbol-treep+ (intern "treep" *root-symbol*))
+(defvar *symbol-space* +symbol-treep+)
 (defvar *read-symbol-syntax* nil)
 
 (defun intern (name &optional (space *symbol-space*))
@@ -61,7 +62,7 @@
 	 (symbol-name (with-output-to-string (s)
 			(cl:loop
 			   (let ((whitespace '(#\Space #\Newline #\Backspace #\Tab #\Linefeed #\Page #\Return #\Rubout))
-				 (terminating-chars '(#\( #\) #\#))
+				 (terminating-chars '(#\( #\) #\# #\[ #\]))
 				 (ch (read-char stream nil)))
 			     (cond
 			       ((eql ch separator)
