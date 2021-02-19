@@ -10,40 +10,47 @@
    (parent :reader symbol-parent :initarg :parent :type symbol :initform nil)
    (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)))
 
-(defvar *root-symbol* (make-instance 'symbol :name "")) ;;TODO should be a constant!
-(defconstant +symbol-treep+ (intern "treep" *root-symbol*))
-(defvar *symbol-space* +symbol-treep+)
-(defvar *read-symbol-syntax* nil)
-
-(defun intern (name &optional (space *symbol-space*))
+(defun %intern (name space)
   (let ((the-name (string name))
 	(space (typecase space
 		 (symbol-space space)
 		 (symbol (or (symbol-space space)
 			     (setf (symbol-space space) (make-instance 'symbol-space :name space))))
 		 (t (error "Not a symbol space designator: ~S" space))))) ;TODO dedicated condition
-    (or (find-symbol the-name space)
+    (or (%find-symbol the-name space)
 	(let ((symbol (make-instance 'symbol :name the-name :parent (symbol-space-name space))))
 	  (setf (symbol-space-contents space)
 		(fset:with (symbol-space-contents space) the-name symbol))
 	  symbol))))
 
-(defun find-symbol (name &optional (space *symbol-space*) exclude)
+(defun %find-symbol (name space &optional exclude)
   (let ((the-name (string name))
 	(space (typecase space
 		 (symbol-space space)
-		 (symbol (or (symbol-space space) (return-from find-symbol)))
+		 (symbol (or (symbol-space space) (return-from %find-symbol)))
 		 (t (error "Not a symbol space designator: ~S" space))))) ;TODO dedicated condition
     (when (member space exclude)
-      (return-from find-symbol))
+      (return-from %find-symbol))
     (let ((symbol (fset:@ (symbol-space-contents space) the-name)))
       (if symbol
 	  symbol
 	  (fset:do-seq (s (symbol-space-search-path space))
 	    (unless (member s exclude)
 	      (push s exclude)
-	      (let ((symbol (find-symbol name s exclude)))
-		(when symbol (return-from find-symbol symbol)))))))))
+	      (let ((symbol (%find-symbol name s exclude)))
+		(when symbol (return-from %find-symbol symbol)))))))))
+
+
+(defvar *root-symbol* (make-instance 'symbol :name "")) ;;TODO rename with ++
+(defvar +symbol-treep+ (%intern "treep" *root-symbol*))
+(defvar *symbol-space* +symbol-treep+)
+(defvar *read-symbol-syntax* nil)
+
+(defun intern (name &optional (space *symbol-space*))
+  (%intern name space))
+
+(defun find-symbol (name &optional (space *symbol-space*) exclude)
+  (%find-symbol name space exclude))
 
 (defun print-symbol (symbol &optional (stream *standard-output*))
   (let ((parent (symbol-parent symbol)))
@@ -53,7 +60,7 @@
   (princ (symbol-name symbol) stream)
   symbol)
 
-(defun read-symbol (stream)
+(defun read-symbol (stream &optional (intern-function #'intern))
   (let* ((separator #\:)
 	 (symbol-space (if (eql (peek-char t stream) separator)
 			   (progn (read-char stream) *root-symbol*)
@@ -72,10 +79,10 @@
 				(when ch (unread-char ch stream))
 				(return))
 			       (t (princ ch s)))))))
-	 (symbol (intern symbol-name symbol-space)))
+	 (symbol (funcall intern-function symbol-name symbol-space)))
     (if continue
 	(let ((*symbol-space* symbol))
-	  (read-symbol stream))
+	  (read-symbol stream intern-function))
 	symbol)))
 
 (defun read-symbol-from-string (s)

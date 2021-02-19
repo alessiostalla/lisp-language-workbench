@@ -62,9 +62,8 @@ Treep is developed and tested on ABCL and SBCL.
 
 Treep is structured as a tower of languages.
  * At level -1, the foundation, we have Common Lisp.
- * At level 0, the ground floor, we have the minimal set of classes and functions to implement a Treep interpreter and a crude reader in Common Lisp.
- * At level 1, the first floor, we have a Treep reader implemented in Treep, along with its support functions.
- * At level 2, we reimplement the Treep interpreter in Treep.
- * At level 3, we implement a Treep compiler in Treep.
- * At level 4, we recompile every level from the ground floor up (the compiler becomes self-hosting).
- * At level 5, we define an editor abstraction, type system, documentation system and other high-level systems.
+ * At level 0, the ground floor, we have the minimal set of classes and functions to implement a Treep reader and interpreter in Common Lisp.
+ * At level 1, we reimplement the Treep reader and interpreter in Treep.
+ * At level 2, we implement a Treep compiler in Treep, leveraging the underlying Lisp compiler.
+ * At level 3, we recompile every level from the ground floor up (the compiler becomes self-hosting).
+ * At level 4, we define an editor abstraction, type system, documentation system and other high-level systems.

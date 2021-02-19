@@ -13,6 +13,8 @@
 (defgeneric init-subform (parent name child))
 (defmethod init-subform ((parent form) (name (eql 'parent)) (child form))
   nil)
+(defmethod init-subform ((parent form) name child)
+  nil)
 (defmethod init-subform ((parent form) name (child form))
   (setf (form-parent child) parent)) ;;TODO check it doesn't already have a parent
 
@@ -20,7 +22,7 @@
   (cl:loop
      :for slot :in (closer-mop:class-slots (class-of instance))
      :do (let ((name (closer-mop:slot-definition-name slot)))
-	   (if (and (slot-boundp instance name) (typep (slot-value instance name) 'form))
+	   (if (slot-boundp instance name)
 	       (init-subform instance name (slot-value instance name)))))) ;;TODO lists of children
 
 (defgeneric transform (transformer form environment))

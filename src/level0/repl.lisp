@@ -7,7 +7,7 @@
    (format t "~A> " (package-name *package*))
    (force-output)
    (restart-case
-       (let ((form (read reader *standard-input*)))
+       (let ((form (read-form reader *standard-input*)))
 	 (when (typep form 'quit) (return))
 	 (with-read-symbol-syntax ()
 	   (print (transform evaluator form *environment*)))

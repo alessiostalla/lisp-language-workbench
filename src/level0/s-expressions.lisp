@@ -4,22 +4,20 @@
 
 (defmethod form-template ((form form))
   (let ((class (class-of form)))
-    `(,(class-name class) ,@(remove-if (lambda (x) (or
-						    (eq 'parent (closer-mop:slot-definition-name x))
-						    (eq 'documentation (closer-mop:slot-definition-name x)))) ;TODO make documentation optional at the end
+    `(,(class-name class) ,@(remove-if (lambda (x) (eq 'parent (closer-mop:slot-definition-name x)))
 				       (closer-mop:class-slots class)))))
 
-(defun read-form (sexp)
+(defun sexp-->form (sexp)
   (if (consp sexp)
       (cond
 	((eq (car sexp) 'list)
-	 (fset:convert 'fset:seq (mapcar #'read-form (cdr sexp))))
-	((symbolp (car sexp)) (read-complex-form sexp (find-class (car sexp))))
-	((symbol? (car sexp)) (read-complex-form sexp (meaning (car sexp) +kind-class+)))
-	(t (fset:convert 'fset:seq (mapcar #'read-form sexp))))
+	 (fset:convert 'fset:seq (mapcar #'sexp-->form (cdr sexp))))
+	((symbolp (car sexp)) (translate-complex-form sexp (find-class (car sexp))))
+	((symbol? (car sexp)) (translate-complex-form sexp (meaning (car sexp) +kind-class+)))
+	(t (fset:convert 'fset:seq (mapcar #'sexp-->form sexp))))
       sexp))
 
-(defun read-complex-form (sexp form-class)
+(defun translate-complex-form (sexp form-class)
   (unless (closer-mop:class-finalized-p form-class)
     (closer-mop:finalize-inheritance form-class))
   (let* ((template (form-template (closer-mop:class-prototype form-class)))
@@ -32,7 +30,7 @@
 					    sym)
 					  x))
 				    template))
-	 (matching-sexp (mapcar (lambda (x) (if (consp x) (read-form x) x))
+	 (matching-sexp (mapcar (lambda (x) (if (consp x) (sexp-->form x) x))
 				(ensure-list-length sexp (length compiled-template))))
 	 (unification (cl-unification:unify compiled-template matching-sexp))
 	 (result (make-instance form-class)))
@@ -67,7 +65,7 @@
 	    template)))
 
 (defmethod print-object ((object form) stream)
-  (print `(read-form ',(transform (make-instance 'sexp-transformer) object *environment*)) stream))
+  (print `(sexp-->form ',(transform (make-instance 'sexp-transformer) object *environment*)) stream))
 
 (defmethod cl-unification::occurs-in-p ((var cl:symbol) (pat form) env)
   nil) ;To avoid WARNING: Occurrence test unimplemented for pattern...

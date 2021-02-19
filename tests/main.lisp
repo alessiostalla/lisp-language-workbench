@@ -43,45 +43,45 @@
       (ok (= value result)))))
 
 (deftest evaluator+reader
-  (testing "Evaluating the form read from '(binding (variable-definition #^a 1) (variable-read #^a)) should eval to 1"
+  (testing "Evaluating the form (binding (variable-definition a 1) (variable-read a)) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding (variable-definition #^a 1) (variable-read #^a))")))
+	     (form (with-input-from-string (s "(binding (variable-definition a 1) (variable-read a))") (read-form s *environment*)))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (= 1 result)))))
-  (testing "Evaluating the form read from '(binding (function-definition #^f (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1))) should eval to 1"
+  (testing "Evaluating the form (binding (function-definition f (function [(function-argument x)] (variable-read x))) (function-call f [1])) should eval to 1"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((function-argument #^x)) (variable-read #^x))) (function-call #^f (1)))")))
-	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
-	(ok (= 1 result))))))
+	     (form (with-input-from-string (s "(binding (function-definition f (function [(function-argument x)] (variable-read x))) (function-call f [1]))") (read-form s *environment*))))
+	(ok (typep form 'standard-object))
+	(ok (= 1 (transform (make-instance 'simple-evaluator) form *environment*)))))))
 
+#+todo
 (deftest evaluator+environment
   (testing "(the-global-environment) yields the global environment"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(function-call #^the-global-environment)")))
+	     (form (sexp-->form (read-from-string "(function-call #^the-global-environment)")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (eq *environment* result))))))
-
 
 (deftest evaluator-function-call-protocol
   (testing "An optional function argument with no default, which is not provided, evaluates to nil"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((optional-function-argument #^x)) (variable-read #^x))) (function-call #^f))")))
+	     (form (sexp-->form (read-from-string "(binding (function-definition #^f (function ((optional-function-argument #^x)) (variable-read #^x))) (function-call #^f))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (null result)))))
   (testing "An optional function argument which is not provided evaluates to its default value"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((optional-function-argument #^x (function-call #^the-global-environment))) (variable-read #^x))) (function-call #^f))")))
+	     (form (sexp-->form (read-from-string "(binding (function-definition #^f (function ((optional-function-argument #^x 1)) (variable-read #^x))) (function-call #^f))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
-	(ok (eq *environment* result)))))
+	(ok (= 1 result)))))
   (testing "A rest function argument accumulates all the remaining arguments into a list"
     (with-read-symbol-syntax ()
       (let* ((*package* (find-package :treep))
-	     (form (read-form (read-from-string "(binding (function-definition #^f (function ((rest-function-argument #^x)) (variable-read #^x))) (function-call #^f (1 2 3)))")))
+	     (form (sexp-->form (read-from-string "(binding (function-definition #^f (function ((rest-function-argument #^x)) (variable-read #^x))) (function-call #^f (1 2 3)))")))
 	     (result (transform (make-instance 'simple-evaluator) form *environment*)))
 	(ok (typep result 'fset:seq))
 	(ok (= (fset:size result) 3))
