@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (defconstant +kind-class+    (intern "class"    +symbol-treep+))
 (defconstant +kind-function+ (intern "function" +symbol-treep+))
@@ -122,19 +122,8 @@
 (defmethod definition-kind (transformer (definition function-definition))
   +kind-function+)
 
-(defclass lisp (form)
-  ((expression :initarg :expression :initform nil :reader lisp-expression)
-   (variables :initarg :variables :initform (fset:seq) :reader lisp-variables)))
-
 (defun initial-environment ()
-  (let ((env (make-instance 'environment)))
-    (setf env (augment-environment
-	       env
-	       (intern "the-global-environment" *root-symbol*)
-	       +kind-function+
-	       (make-instance 'function
-			      :expression (make-instance 'lisp :expression '*environment*))))
-    env))
+  (make-instance 'environment))
 
 (defvar *environment* (initial-environment))
 

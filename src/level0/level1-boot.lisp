@@ -1,7 +1,7 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (setf *environment* (import-lisp-package (find-package :common-lisp)))
-(setf *environment* (import-lisp-package (find-package :treep) :space +symbol-treep+))
+(setf *environment* (import-lisp-package (find-package :treep-impl) :space +symbol-treep+))
 (setf *environment* (import-lisp-package (find-package :closer-mop) :space (intern "mop" +symbol-treep+)))
 (setf *environment* (import-lisp-package (find-package :fset) :space (intern "collections" +symbol-treep+)))
 

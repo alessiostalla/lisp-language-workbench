@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (defclass symbol-space ()
   ((name :reader symbol-space-name :initarg :name :type symbol)
@@ -40,9 +40,8 @@
 	      (let ((symbol (%find-symbol name s exclude)))
 		(when symbol (return-from %find-symbol symbol)))))))))
 
-
-(defvar *root-symbol* (make-instance 'symbol :name "")) ;;TODO rename with ++
-(defvar +symbol-treep+ (%intern "treep" *root-symbol*))
+(defvar +root-symbol+ (make-instance 'symbol :name "")) ;;Note this should be a constant but making it a constant is complex
+(defvar +symbol-treep+ (%intern "treep" +root-symbol+))
 (defvar *symbol-space* +symbol-treep+)
 (defvar *read-symbol-syntax* nil)
 
@@ -63,7 +62,7 @@
 (defun read-symbol (stream &optional (intern-function #'intern))
   (let* ((separator #\:)
 	 (symbol-space (if (eql (peek-char t stream) separator)
-			   (progn (read-char stream) *root-symbol*)
+			   (progn (read-char stream) +root-symbol+)
 			   *symbol-space*))
 	 continue
 	 (symbol-name (with-output-to-string (s)

@@ -67,3 +67,8 @@ Treep is structured as a tower of languages.
  * At level 2, we implement a Treep compiler in Treep, leveraging the underlying Lisp compiler.
  * At level 3, we recompile every level from the ground floor up (the compiler becomes self-hosting).
  * At level 4, we define an editor abstraction, type system, documentation system and other high-level systems.
+
+## License
+
+To the general public, Treep is distributed under the AGPL license, which is quite strict.
+However, individuals and corporations that want to use Treep for their purposes can obtain a friendlier license (either for free or for a fee, depending on the intended use).

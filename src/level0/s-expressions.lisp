@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (defgeneric form-template (form))
 

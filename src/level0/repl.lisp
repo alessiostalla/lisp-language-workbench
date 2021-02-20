@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (defclass quit (form) ())
 

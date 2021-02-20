@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (defclass class-definition (definition)
   ((superclasses :initform (fset:seq) :initarg :superclasses :accessor class-definition-superclasses)
@@ -150,8 +150,8 @@
 					    :initial-value (fset:seq))))))
 
 (defmethod transform ((transformer simple-evaluator) (form slot-read) environment)
-  (slot-value (transform transformer (accessed-object form) environment) (lisp-symbol (transform transformer (accessed-slot-name form) environment))))
+  (cl:slot-value (transform transformer (accessed-object form) environment) (lisp-symbol (transform transformer (accessed-slot-name form) environment))))
 
 (defmethod transform ((transformer simple-evaluator) (form slot-write) environment)
-  (setf (slot-value (transform transformer (accessed-object form) environment) (lisp-symbol (transform transformer (accessed-slot-name form) environment)))
+  (setf (cl:slot-value (transform transformer (accessed-object form) environment) (lisp-symbol (transform transformer (accessed-slot-name form) environment)))
 	(transform transformer (slot-write-new-value form) environment)))

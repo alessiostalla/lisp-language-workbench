@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (define-condition premature-end-of-form (error) ())
 
@@ -55,8 +55,7 @@
     form))
 
 (defun load (stream &key (evaluator (make-instance 'simple-evaluator)) (intern-function #'intern))
-  (let ((*package* (find-package :treep))
-	(*symbol-space* *symbol-space*)
+  (let ((*symbol-space* *symbol-space*)
 	(environment (copy-environment))) ;So we don't side-effect it
     (cl:loop
      (unless (peek-char t stream nil nil)

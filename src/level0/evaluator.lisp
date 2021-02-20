@@ -1,4 +1,4 @@
-(in-package :treep)
+(in-package :treep-impl)
 
 (defclass simple-evaluator () ())
 
@@ -137,16 +137,6 @@
 
 (defmethod transform ((transformer simple-evaluator) (form loop-break) environment)
   (throw (loop-name form) (transform transformer (return-form form) environment)))
-
-(defmethod transform ((transformer simple-evaluator) (form lisp) environment)
-  (common-lisp:eval `(let ,(fset:convert
-			    'list
-			    (fset:image
-			     (lambda (v)
-			       (list (fset:@ v 0)
-				     (transform transformer (make-instance 'variable-read :name (fset:@ v 1)) environment)))
-			     (lisp-variables form)))
-		       ,(lisp-expression form))))
 
 (defun eval (form &optional (*environment* *environment*))
   (transform (make-instance 'simple-evaluator) form *environment*))
