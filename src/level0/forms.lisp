@@ -23,7 +23,7 @@
      :for slot :in (closer-mop:class-slots (class-of instance))
      :do (let ((name (closer-mop:slot-definition-name slot)))
 	   (if (slot-boundp instance name)
-	       (init-subform instance name (slot-value instance name)))))) ;;TODO lists of children
+	       (init-subform instance name (cl:slot-value instance name)))))) ;;TODO lists of children
 
 (defgeneric transform (transformer form environment))
 

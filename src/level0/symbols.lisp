@@ -8,7 +8,8 @@
 (defclass symbol ()
   ((name :reader symbol-name :initarg :name :type string)
    (parent :reader symbol-parent :initarg :parent :type symbol :initform nil)
-   (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)))
+   (space :accessor symbol-space :initarg :space :type symbol-space :initform nil)
+   (properties :accessor symbol-properties :initform (fset:map) :type fset:map)))
 
 (defun %intern (name space)
   (let ((the-name (string name))

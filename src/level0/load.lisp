@@ -47,7 +47,7 @@
 	(return))
       (let ((subform (read-form stream environment))
 	    (slot-name (closer-mop:slot-definition-name slot)))
-	(setf (slot-value form slot-name) subform)
+	(setf (cl:slot-value form slot-name) subform)
 	(init-subform form slot-name subform)))
     (unless (char= (peek-char t stream) #\))
       (error "No more subforms expected"))

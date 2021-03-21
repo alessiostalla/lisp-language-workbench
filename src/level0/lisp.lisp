@@ -40,10 +40,15 @@
       (setf environment (augment-environment environment into +kind-class+ class)))) ;;TODO handle redefinition through indirection?
   environment)
 
+(defconstant +lisp-symbol+ (intern "lisp-symbol" +symbol-treep+))
+
 (defun lisp-symbol (symbol)
-  (let ((parent (symbol-parent symbol)))
-    (if (and parent (not (eq parent +root-symbol+)))
-	(if (or (null (symbol-parent parent)) (eq (symbol-parent parent) +root-symbol+))
-	    (cl:intern (string-upcase (symbol-name symbol)) (string-upcase (symbol-name parent)))
-	    (error "The symbol ~A doesn't represent any Lisp symbol" symbol)) ;TODO
-	(cl:intern (string-upcase (symbol-name symbol)) (find-package :keyword)))))
+  (or (fset:@ (symbol-properties symbol) +lisp-symbol+)
+      (setf (fset:@ (symbol-properties symbol) +lisp-symbol+)
+	    (let ((parent (symbol-parent symbol)))
+	      (if (and parent (not (eq parent +root-symbol+)))
+		  (if (and (or (null (symbol-parent parent)) (eq (symbol-parent parent) +root-symbol+))
+			   (find-package (symbol-name parent)))
+		      (cl:intern (symbol-name symbol) (symbol-name parent))
+		      (cl:make-symbol (symbol-name symbol)))
+		  (cl:intern (symbol-name symbol) (find-package :keyword)))))))
