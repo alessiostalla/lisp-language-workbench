@@ -13,7 +13,7 @@ jobs:
     strategy:
       # Each combination of lisp and os are tested
       matrix:
-        lisp: [sbcl-bin, ccl-bin]
+        lisp: [sbcl-bin]
         os: [windows-latest, ubuntu-latest, macOS-latest]
 
     steps:
