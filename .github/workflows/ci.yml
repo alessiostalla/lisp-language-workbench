@@ -14,8 +14,7 @@ jobs:
       # Each combination of lisp and os are tested
       matrix:
         lisp: [sbcl-bin]
-	os: [windows-latest, ubuntu-latest, macOS-latest]
-#        os: [windows-latest, ubuntu-latest, macOS-latest]
+	os: [macOS-latest]
 
     steps:
       - name: windows specific settings
