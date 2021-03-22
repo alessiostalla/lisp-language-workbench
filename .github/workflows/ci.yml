@@ -34,4 +34,4 @@ jobs:
         run:  ros install rove # for [run-] rove
       - name: Run tests
         shell: bash
-        run: rove treep.asd
+        run: ~/.roswell/bin/rove treep.asd
